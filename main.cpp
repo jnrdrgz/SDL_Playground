@@ -7,6 +7,57 @@
 auto degrees_to_radians = [](double v){return (v * PI)/180;};
 auto radians_to_degrees = [](double v){return (v * 180)/PI;};
 
+class Helpers
+{
+public:
+    ///CALC DIAGONAL BULLET VELOCITY
+    static double calc_x_vel_angle(int angle){
+        bool neg_flag = true;
+        
+        if(angle > 180){
+            angle -= 90;
+            neg_flag = false;
+        }
+
+        double v = std::sin(degrees_to_radians((double)angle*-1.0));
+
+        if(neg_flag){
+            v *= -1;
+        }
+
+        return v*10.0;
+    }
+
+    static double calc_y_vel_angle(int angle){
+        angle *= -1;
+        double v = std::cos(degrees_to_radians((double)angle*-1.0));
+        return v*10.0;
+    }
+
+
+    static int calculate_angle(SDL_Point p1, SDL_Point p2, SDL_Point p3){
+        //int dot = x1*x2 + y1*y2;//      # dot product between [x1, y1] and [x2, y2]
+        //int det = x1*y2 - y1*x2;//      # determinant
+        //int angle = atan2(det, dot);
+        //return angle;
+
+        SDL_Point p4 = {p2.x-p1.x, p2.y-p1.y};
+        SDL_Point p5 = {p3.x-p1.x, p3.y-p1.y};
+
+        double angle1 = atan2(p4.x, p4.y) * 180 / PI;
+        double angle2 = atan2(p5.x, p5.y) * 180 / PI;
+
+        angle2 = (angle2*-1)-180;
+        //printf("%.2f,%.2f\n",angle1,angle2);
+        return (int)angle2;
+    }
+
+    static int positive(int a){
+        return a < 0 ? a*-1 : a;
+    }
+    
+};
+
 class Arrow
 {
 public:
@@ -42,32 +93,6 @@ public:
 
 };
 
-///CALC DIAGONAL BULLET VELOCITY
-double calc_x_vel_angle(int angle){
-    bool neg_flag = true;
-    //printf("%.2f\n", std::sin(degrees_to_radians(90.0)));
-    if(angle > 180){
-        angle -= 90;
-        neg_flag = false;
-    }
-
-
-    double v = std::sin(degrees_to_radians((double)angle*-1.0));
-
-
-    if(neg_flag){
-        v *= -1;
-    }
-
-    return v*10.0;
-}
-
-double calc_y_vel_angle(int angle){
-    angle *= -1;
-    double v = std::cos(degrees_to_radians((double)angle*-1.0));
-    return v*10.0;
-}
-
 class Bullet
 {
 public:
@@ -77,7 +102,7 @@ public:
     int x_vel = 0;
     int y_vel = 0;
     bool shooted = false;
-
+    
     Bullet(){
              
     }
@@ -95,35 +120,6 @@ public:
             SDL_SetRenderDrawColor( r, 0, 0, 0, 255);
             SDL_RenderFillRect(r, &rct);
         }
-    }
-
-    
-    int get_x_y_vel(int n, int v){
-        if(n <= 50){
-            return v*5*-1;
-        } else if (n > 50 && n <= 100){
-            return v*4*-1;
-        } else if (n > 100 && n <= 150){
-            return v*3*-1;
-        }else if (n > 150 && n <= 200){
-            return v*2*-1;
-        }else if (n > 200 && n <= 250){
-            return v*-1;
-        }
-
-        else if (n > 250 && n <= 300){
-            return v;
-        } else if (n > 300 && n <= 350){
-            return v*2;
-        } else if (n > 350 && n <= 400){
-            return v*3;
-        }else if (n > 400 && n <= 450){
-            return v*4;
-        }else if (n > 450 && n <= 500){
-            return v*5;
-        }
-
-        return v;
     }
 
     void handle_input(SDL_Event e, int angle){
@@ -147,12 +143,8 @@ public:
             //}
 
             if(!shooted){
-                //x_vel = get_x_y_vel(e.button.x, 1);
-                //y_vel = get_x_y_vel(e.button.y, 1);
-
-                x_vel = (int)calc_x_vel_angle( (angle*-1)-180);
-                y_vel = (int)calc_y_vel_angle( (angle*-1)-180);
-    
+                x_vel = (int)Helpers::calc_x_vel_angle( (angle*-1)-180);
+                y_vel = (int)Helpers::calc_y_vel_angle( (angle*-1)-180);
 
                 shooted = true;
             }
@@ -178,30 +170,6 @@ public:
 
 };
 
-
-
-int calculate_angle(SDL_Point p1, SDL_Point p2, SDL_Point p3){
-    //int dot = x1*x2 + y1*y2;//      # dot product between [x1, y1] and [x2, y2]
-    //int det = x1*y2 - y1*x2;//      # determinant
-    //int angle = atan2(det, dot);
-    //return angle;
-
-    SDL_Point p4 = {p2.x-p1.x, p2.y-p1.y};
-    SDL_Point p5 = {p3.x-p1.x, p3.y-p1.y};
-
-    double angle1 = atan2(p4.x, p4.y) * 180 / PI;
-    double angle2 = atan2(p5.x, p5.y) * 180 / PI;
-    //printf("%.2f,%.2f\n",angle1,angle2);
-    return (int)angle2;
-}
-
-int positive(int a){
-    return a < 0 ? a*-1 : a;
-}
-
-
-
-
 int main(int argc, char* args[])
 {
     Game game;
@@ -215,8 +183,7 @@ int main(int argc, char* args[])
     int angle = 0;
 
     SDL_Point p1 = {arrow.rct.x, arrow.rct.y+arrow.rct.h};
-    SDL_Point p2 = {arrow.rct.x, 0};
-    
+    SDL_Point p2 = {arrow.rct.x, 0};    
     SDL_Point p3 = {arrow.rct.x, arrow.rct.y+arrow.rct.h};
     SDL_Point p4 = {x1,y1};
 
@@ -230,18 +197,21 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_MOUSEMOTION){
                 p4.x = game.event.button.x;
                 p4.y = game.event.button.y;
-                angle = calculate_angle(p1,p2,p4);
+                angle = Helpers::calculate_angle(p1,p2,p4);
                 //printf("%d\n", angle);
-                arrow.set_angle((angle*-1)-180);
+                arrow.set_angle(angle);
                 
                 //printf("%d\n", (angle*-1)-180);
-                printf("X: %.2f, Y: %.2f\n", calc_x_vel_angle( (angle*-1)-180), calc_y_vel_angle( (angle*-1)-180));
+                //printf("X: %.2f, Y: %.2f\n", calc_x_vel_angle( (angle*-1)-180), calc_y_vel_angle( (angle*-1)-180));
     
                 
                 //todo
                 //change w,h acording line size!!
                 //printf("---->%d, %d\n", positive(250-p4.x), positive(250-p4.y));
                 
+                //////////////////////////////
+                
+                /*
                 if(!bullet.shooted){
                     if( positive(250-p4.y) > positive(250-p4.x)){
                         bullet.rct.h = bullet.rct.w = (250-positive(250-p4.x))/7;
@@ -249,6 +219,9 @@ int main(int argc, char* args[])
                         bullet.rct.h = bullet.rct.w = (250-positive(250-p4.y))/7;
                     }
                 }
+
+                */
+                //////////////////////////////
                     //bullet.rct.h = (250-p4.y)/7;
                     //bullet.rct.w = (250-p4.y)/7;
                 //} else {
@@ -260,7 +233,7 @@ int main(int argc, char* args[])
                 //todo
             }
             arrow.handle_input(game.event);
-            bullet.handle_input(game.event, (angle*-1)-180);
+            bullet.handle_input(game.event, angle);
         }
         
         // switch (game.event.type)
