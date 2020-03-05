@@ -13,7 +13,6 @@ public:
     void close();
 	SDL_Renderer *renderer = NULL;
 	SDL_Event event;
-	
     bool running = false;
 	
 private:

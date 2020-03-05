@@ -15,13 +15,18 @@ void Text::update(std::string text, SDL_Color color, SDL_Renderer* renderer, TTF
 }
 
 void Text::load_text_texture(std::string text, SDL_Color color, SDL_Renderer* renderer, TTF_Font* font){
-    printf("loading text texture\n");
+    
+    //log
+    //printf("loading text texture\n");
+    
+
     if(textTexture){
         SDL_DestroyTexture(textTexture);
         textTexture = NULL;
     }
-    printf("loading surface\n");
-    
+    //log
+    //printf("loading surface\n");
+        
     if(!font){
         printf("fatal error: %s\n", SDL_GetError());
     }
@@ -34,7 +39,9 @@ void Text::load_text_texture(std::string text, SDL_Color color, SDL_Renderer* re
     }
 
     len = text.length();
-    printf("loading texture\n");
+
+    //log
+    //printf("loading texture\n");
     textTexture = SDL_CreateTextureFromSurface( renderer, textSurface );
     
     if(!textTexture){

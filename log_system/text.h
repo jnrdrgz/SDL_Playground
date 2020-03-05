@@ -14,7 +14,9 @@ public:
     void load_text_texture(std::string text, SDL_Color color, SDL_Renderer* renderer, TTF_Font* font);
     
     //test
-	void update_text_texture(std::string text, SDL_Renderer* renderer){}
+	void update_text_texture(std::string text, SDL_Renderer* renderer){
+        load_text_texture(text, this->color, renderer, this->font);
+    }
     //test
 
     void render(int x, int y, SDL_Renderer* renderer);

@@ -25,6 +25,7 @@ public:
         if(e.type == SDL_MOUSEMOTION){
             //printf("%d, %d\n", e.button.x,e.button.y);
         }
+
     }
 
     void update(){
@@ -43,11 +44,11 @@ int main(int argc, char* args[])
     Uint32 t = SDL_GetTicks();
     printf("%d\n", t);
     
-    log_system.add_text("fps", "12312.1231", game.renderer);
+    log_system.add_text("fps", std::to_string(t), game.renderer);
     log_system.add_text("otra_cosa", "cosardadadr", game.renderer);
 
     while(game.running){
-        //t = SDL_GetTicks();
+        t = SDL_GetTicks();
         //printf("%d\n", t);
 
         SDL_RenderClear(game.renderer);
@@ -57,11 +58,16 @@ int main(int argc, char* args[])
                 game.running = false;
             }
             if(game.event.type == SDL_MOUSEMOTION){
-    
+                
+            }
+            if(game.event.type == SDL_MOUSEBUTTONDOWN){                
             }
         }
 
+        
+        log_system.update_text("fps", std::to_string(t), game.renderer);
         log_system.draw(game.renderer);
+
         
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
