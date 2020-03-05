@@ -1,5 +1,9 @@
 #include <SDL2/SDL.h>
 #include "game.h"
+#include "text.h"
+#include "log_system.h"
+
+static LogSystem log_system = LogSystem();
 
 class Bomb
 {
@@ -34,12 +38,17 @@ int main(int argc, char* args[])
 {
     Game game;
     game.init("test", 500, 500);
-    
+    log_system.init();
+
     Uint32 t = SDL_GetTicks();
     printf("%d\n", t);
+    
+    log_system.add_text("fps", "12312.1231", game.renderer);
+    log_system.add_text("otra_cosa", "cosardadadr", game.renderer);
 
     while(game.running){
-        printf("%d\n", t);
+        //t = SDL_GetTicks();
+        //printf("%d\n", t);
 
         SDL_RenderClear(game.renderer);
 
@@ -51,6 +60,8 @@ int main(int argc, char* args[])
     
             }
         }
+
+        log_system.draw(game.renderer);
         
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
