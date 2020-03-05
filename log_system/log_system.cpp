@@ -16,6 +16,14 @@ void LogSystem::add_text(std::string reference, std::string text, SDL_Renderer* 
 	text_umap[reference] =  new Text(text, color, renderer, font);
 }
 
+void LogSystem::delete_text(std::string reference){
+	std::unordered_map<std::string,Text*>::const_iterator text_in_pile = text_umap.find(reference);
+	if(text_in_pile == text_umap.end()){
+		printf("Text to delete not found in log system\n");
+	} else {
+		text_umap.erase(reference);
+}	}
+
 void LogSystem::update_text(std::string reference, std::string text, SDL_Renderer* renderer){
 	text_umap[reference]->update_text_texture(text, renderer);
 }

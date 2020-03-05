@@ -4,6 +4,7 @@ Text::Text(std::string text, SDL_Color color, SDL_Renderer* renderer, TTF_Font* 
 }
 
 Text::~Text(){
+    printf("TEXT DESTRUCTED\n");
     if(textTexture){
         SDL_DestroyTexture(textTexture);
         textTexture = NULL;

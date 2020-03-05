@@ -60,7 +60,8 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_MOUSEMOTION){
                 
             }
-            if(game.event.type == SDL_MOUSEBUTTONDOWN){                
+            if(game.event.type == SDL_MOUSEBUTTONDOWN){
+                log_system.delete_text("otra_cosa");
             }
         }
 

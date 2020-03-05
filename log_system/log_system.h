@@ -21,6 +21,8 @@ public:
 
 	void add_text(std::string reference, std::string text, SDL_Renderer* renderer);
 
+	void delete_text(std::string reference);
+
 	void update_text(std::string reference, std::string text, SDL_Renderer* renderer);
 
 	void draw(SDL_Renderer* renderer);
