@@ -5,7 +5,7 @@ LogSystem::LogSystem(){
 }
 
 void LogSystem::init(){
-	font = TTF_OpenFont( "../log_system/fonts/Lato-Bold.ttf", size );
+	font = TTF_OpenFont( "fonts/Lato-Bold.ttf", size );
 	if(!font){
 		printf("fatal error creating log system: font not loaded correctly: %s\n", TTF_GetError());
 	}
