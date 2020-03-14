@@ -51,10 +51,11 @@ public:
     std::vector<SDL_Rect> src_rct_v;    
     SDL_Rect dst_rct = {200,200,200,200};
     BombAnimationState state = STEADY;
+    int animationFrame = 0;
     
 
     Bomb(SDL_Renderer *r){
-        SDL_Surface* tmp_srf = IMG_Load("dynamitef.png");
+        SDL_Surface* tmp_srf = IMG_Load("dynamite_corrected.png");
         texture = SDL_CreateTextureFromSurface(r, tmp_srf);
         SDL_FreeSurface(tmp_srf);
 
@@ -71,9 +72,29 @@ public:
 
     void draw(SDL_Renderer* r, int frame){
         if(state == STEADY){
-            SDL_RenderCopyEx(r, texture, &src_rct_v[4], &dst_rct, 0, 0, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(r, texture, &src_rct_v[0], &dst_rct, 0, 0, SDL_FLIP_NONE);
+            
         } else if (state == ABOUT_TO_EXPLODE){
-
+            SDL_RenderCopyEx(r, texture, &src_rct_v[animationFrame], &dst_rct, 0, 0, SDL_FLIP_NONE);
+            if(frame == 12){
+                animationFrame++;
+            }
+            if(frame == 24){
+                animationFrame++;
+            }
+            if(frame == 36){
+                animationFrame++;
+            }
+            if(frame == 48){
+                animationFrame++;
+            }
+            if(frame == 60){
+                animationFrame++;
+            }
+            if(animationFrame >= src_rct_v.size()){
+                animationFrame = 0;
+                state = STEADY;
+            }
         } else if (state == EXPLODING){
 
         }
@@ -83,6 +104,7 @@ public:
         if(e.type == SDL_MOUSEBUTTONDOWN){
             if(e.button.button == SDL_BUTTON_LEFT && !clicked){
                 clicked = true;
+                state = ABOUT_TO_EXPLODE;
             }
 
         } 
@@ -113,6 +135,7 @@ int main(int argc, char* args[])
     timer.start();
 
     int frame = 0;
+    int animationFrame = 0;
 
     log_system.add_text("FPS", "", game.renderer);
 
@@ -130,7 +153,7 @@ int main(int argc, char* args[])
             bomb.handle_input(game.event);
         }
 
-        bomb.draw(game.renderer, frame);
+        bomb.draw(game.renderer, animationFrame);
 
         float avgFPS = (float)frame / (float)timer.getTicks_in_seconds();
         if( avgFPS > 2000000 )
@@ -146,6 +169,11 @@ int main(int argc, char* args[])
         SDL_RenderPresent(game.renderer);
 
         frame++;
+        animationFrame++;
+        printf("%d\n", animationFrame);
+        if(animationFrame > (int)avgFPS){
+            animationFrame = 0;
+        }
     }
     
     game.close();
