@@ -1,0 +1,4 @@
+-LOG_SYSTEM: seg fault when update text that is not in the log_sys unordered_map.
+-LOG_SYSTEM: display in format name: value because it's no organized in list and you dont know what value is what value.
+-LOG_SYSTEM: option to update all the textes in the system, if not you have to add all at the end of main loop...
+-LOG_SYSTEM: add a log in the other corner (maybe adding position config)

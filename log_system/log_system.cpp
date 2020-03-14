@@ -13,7 +13,8 @@ void LogSystem::init(){
 }
 
 void LogSystem::add_text(std::string reference, std::string text, SDL_Renderer* renderer){
-	text_umap[reference] =  new Text(text, color, renderer, font);
+	//text_umap[reference] =  new Text(text, color, renderer, font);
+	text_umap[reference] =  new Text(reference+": "+text, color, renderer, font);
 }
 
 void LogSystem::delete_text(std::string reference){
@@ -25,7 +26,8 @@ void LogSystem::delete_text(std::string reference){
 }	}
 
 void LogSystem::update_text(std::string reference, std::string text, SDL_Renderer* renderer){
-	text_umap[reference]->update_text_texture(text, renderer);
+	//text_umap[reference]->update_text_texture(text, renderer);
+	text_umap[reference]->update_text_texture(reference+": "+text, renderer);
 }
 
 void LogSystem::draw(SDL_Renderer* renderer){

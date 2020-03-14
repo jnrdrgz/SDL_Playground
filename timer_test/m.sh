@@ -1,0 +1,1 @@
+g++ -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer game.cpp game.h main.cpp ../log_system/*.cpp ../log_system/*.h -o game && ./game
