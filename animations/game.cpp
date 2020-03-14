@@ -9,7 +9,7 @@ void Game::init(const char* title, int screenw, int screenh){
     
     TTF_Init();
     IMG_Init(IMG_INIT_PNG);
-    Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 );
+    //Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 );
 
     running = true;
 }
@@ -17,7 +17,7 @@ void Game::init(const char* title, int screenw, int screenh){
 void Game::close(){
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
-    Mix_Quit();
+    //Mix_Quit();
 	IMG_Quit();
     TTF_Quit();
     SDL_Quit();
