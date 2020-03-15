@@ -14,6 +14,7 @@ public:
 	std::unordered_map<std::string, Text*> text_umap;// = std::unordered_map<std::string, Text>();
 	SDL_Color color;
 	int x = 0, y = 0;
+	bool inited = false;
 
 	LogSystem();
 

@@ -3,6 +3,7 @@
 #include "../log_system/log_system.h"
 #include "game.h"
 #include <vector>
+#include <algorithm> 
 
 static LogSystem log_system = LogSystem();
 
@@ -52,6 +53,7 @@ public:
     SDL_Rect dst_rct = {200,200,200,200};
     BombAnimationState state = STEADY;
     int animationFrame = 0;
+    int qFrames = 4;
     
 
     Bomb(SDL_Renderer *r){
@@ -70,27 +72,30 @@ public:
         }
     }
 
-    void draw(SDL_Renderer* r, int frame){
+
+
+    void draw(SDL_Renderer* r, int frame, int avgFrames){
         if(state == STEADY){
             SDL_RenderCopyEx(r, texture, &src_rct_v[0], &dst_rct, 0, 0, SDL_FLIP_NONE);
             
         } else if (state == ABOUT_TO_EXPLODE){
             SDL_RenderCopyEx(r, texture, &src_rct_v[animationFrame], &dst_rct, 0, 0, SDL_FLIP_NONE);
-            if(frame == 12){
+           // for(int i = avgFrames/qFrames; avgFrames + 1 < i; i += avgFrames/qFrames){
+
+            //}
+
+            std::vector<int> in_what_frame_animate;
+            for(int i = avgFrames/qFrames; avgFrames + 1 > i; i += avgFrames/qFrames){
+                in_what_frame_animate.push_back(i);
+            }
+
+            //if(frame == 12 || frame == 24 || frame == 36 || frame == 48 || frame == 60){
+            //  animationFrame++;
+            //}
+            if(std::find(in_what_frame_animate.begin(), in_what_frame_animate.end(), frame) != in_what_frame_animate.end()){
                 animationFrame++;
             }
-            if(frame == 24){
-                animationFrame++;
-            }
-            if(frame == 36){
-                animationFrame++;
-            }
-            if(frame == 48){
-                animationFrame++;
-            }
-            if(frame == 60){
-                animationFrame++;
-            }
+
             if(animationFrame >= src_rct_v.size()){
                 animationFrame = 0;
                 state = STEADY;
@@ -153,13 +158,14 @@ int main(int argc, char* args[])
             bomb.handle_input(game.event);
         }
 
-        bomb.draw(game.renderer, animationFrame);
 
         float avgFPS = (float)frame / (float)timer.getTicks_in_seconds();
         if( avgFPS > 2000000 )
         {
             avgFPS = 0;
         }
+
+        bomb.draw(game.renderer, animationFrame, (int)avgFPS);
 
         log_system.update_text("FPS", std::to_string(avgFPS), game.renderer);
         log_system.draw(game.renderer);
@@ -170,7 +176,7 @@ int main(int argc, char* args[])
 
         frame++;
         animationFrame++;
-        printf("%d\n", animationFrame);
+        //printf("%d\n", animationFrame);
         if(animationFrame > (int)avgFPS){
             animationFrame = 0;
         }
