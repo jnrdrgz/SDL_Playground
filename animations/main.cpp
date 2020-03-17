@@ -111,29 +111,57 @@ public:
         sprite.set_y(50);
     }
 
+    Explosion(SDL_Renderer *r, int x, int y){
+        sprite = Sprite(r, "explosion_r2.png", 4, 4,
+        64, 64);
+
+        sprite.set_x(x);
+        sprite.set_y(y);
+    }
+
     void draw(SDL_Renderer* r, int frame, int avgFrames){
         sprite.draw(r);
 
-        if(readytoanimate){
-            std::vector<int> in_what_frame_animate;
-            for(int i = avgFrames/(qFrames); avgFrames + 1 > i; i += avgFrames/qFrames){
-                in_what_frame_animate.push_back(i);
-            }
+        std::vector<int> in_what_frame_animate;
+        for(int i = avgFrames/(qFrames); avgFrames + 1 > i; i += avgFrames/qFrames){
+            in_what_frame_animate.push_back(i);
+        }
 
-            
-            if(std::find(in_what_frame_animate.begin(), in_what_frame_animate.end(), frame) != in_what_frame_animate.end()){
-                if(!sprite.next_frame()){
-                    readytoanimate = false;
-                }
+        
+        if(std::find(in_what_frame_animate.begin(), in_what_frame_animate.end(), frame) != in_what_frame_animate.end()){
+            if(!sprite.next_frame()){
+                readytoanimate = false;
             }
         }
+    
     }
 
     void handle_input(SDL_Event e){
+        
+
+    }
+
+    void update(){
+
+    }
+
+};
+
+class ExplosionCreator
+{
+private:
+    bool clicked;
+    std::vector<Explosion*> explosions;
+public:
+    ExplosionCreator(){
+
+    }
+
+    void handle_input(SDL_Event e, SDL_Renderer* r){
         if(e.type == SDL_MOUSEBUTTONDOWN){
             if(e.button.button == SDL_BUTTON_LEFT && !this->clicked){
-                this->clicked = true;
-                readytoanimate = true;
+                this->clicked = true; 
+                explosions.push_back(new Explosion(r, e.button.x, e.button.y));   
             }
 
         }
@@ -141,16 +169,16 @@ public:
         if(e.type == SDL_MOUSEBUTTONUP){
             if(e.button.button == SDL_BUTTON_LEFT && this->clicked){
                 this->clicked = false;
-                printf("explosion unclicked\n");
             }
-
         }
-
     }
 
-    void update(){
-
+    void draw(SDL_Renderer* r, int frame, int avgFrames){
+        for(auto explosion : explosions){
+            explosion->draw(r, frame, avgFrames);
+        }
     }
+
 
 };
 
