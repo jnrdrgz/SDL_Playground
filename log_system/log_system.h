@@ -24,7 +24,7 @@ public:
 
 	void delete_text(std::string reference);
 
-	void update_text(std::string reference, std::string text, SDL_Renderer* renderer);
+	void update_text(const std::string reference, std::string text, SDL_Renderer* renderer);
 
 	void draw(SDL_Renderer* renderer);
 };

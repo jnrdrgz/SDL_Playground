@@ -28,7 +28,7 @@ void LogSystem::delete_text(std::string reference){
 		text_umap.erase(reference);
 }	}
 
-void LogSystem::update_text(std::string reference, std::string text, SDL_Renderer* renderer){	
+void LogSystem::update_text(const std::string reference, std::string text, SDL_Renderer* renderer){	
 	if(!inited){printf("WARNING:LOG SYSTEM NOT INITED\n");}
 	//text_umap[reference]->update_text_texture(text, renderer);
 	text_umap[reference]->update_text_texture(reference+": "+text, renderer);
