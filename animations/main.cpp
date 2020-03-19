@@ -22,14 +22,15 @@ class Sprite
 private:
     SDL_Texture* texture = nullptr;
     std::vector<SDL_Rect> src_rct_v;
-    SDL_Rect current_src;
     int current_frame;
+    SDL_Rect current_src;
     SDL_Rect dst_rct = {0,0,100,100};
     
 public:
     Sprite(){
 
     }
+
     Sprite(SDL_Renderer *r, std::string file_name, int src_rows, int src_cols,
         int src_width, int src_height){
         
@@ -59,10 +60,6 @@ public:
             x = 0;
         }
 
-        for(auto rct : src_rct_v){
-            printf("%d-%d\n", rct.x,rct.y);
-        }
-
         current_frame = 0;
         current_src = src_rct_v[current_frame];
     }
@@ -76,7 +73,6 @@ public:
     }
 
     void draw(SDL_Renderer* r){
-
         SDL_RenderCopyEx(r, texture, &current_src, &dst_rct, 0, 0, SDL_FLIP_NONE);
     }
 
@@ -120,17 +116,21 @@ public:
     }
 
     void draw(SDL_Renderer* r, int frame, int avgFrames){
-        sprite.draw(r);
-
-        std::vector<int> in_what_frame_animate;
-        for(int i = avgFrames/(qFrames); avgFrames + 1 > i; i += avgFrames/qFrames){
-            in_what_frame_animate.push_back(i);
-        }
-
         
-        if(std::find(in_what_frame_animate.begin(), in_what_frame_animate.end(), frame) != in_what_frame_animate.end()){
-            if(!sprite.next_frame()){
-                readytoanimate = false;
+        if(frame && avgFrames){
+            sprite.draw(r);
+
+
+            std::vector<int> in_what_frame_animate;
+            for(int i = avgFrames/(qFrames); avgFrames + 1 > i; i += avgFrames/qFrames){
+                in_what_frame_animate.push_back(i);
+            }
+
+            
+            if(std::find(in_what_frame_animate.begin(), in_what_frame_animate.end(), frame) != in_what_frame_animate.end()){
+                if(!sprite.next_frame()){
+                    readytoanimate = false;
+                }
             }
         }
     
@@ -144,6 +144,21 @@ public:
     void update(){
 
     }
+
+};
+
+class ExplosionResource
+{
+    Explosion* explosion;
+public:
+    ExplosionResource(){
+//        explosion = new Explosion;
+    }
+
+    ~ExplosionResource(){
+//        delete explosion;
+    }
+    Explosion *operator->(){return explosion;}
 
 };
 
@@ -162,6 +177,9 @@ public:
             if(e.button.button == SDL_BUTTON_LEFT && !this->clicked){
                 this->clicked = true; 
                 explosions.push_back(new Explosion(r, e.button.x, e.button.y));   
+                if(explosions.size() > 4){
+                    explosions.erase(explosions.begin());
+                }
             }
 
         }
@@ -269,11 +287,12 @@ public:
 int main(int argc, char* args[])
 {
     Game game;
-    game.init("test", 500, 500);
+    game.init("test", 640, 480);
     log_system.init();
     
     Bomb bomb(game.renderer);
     Explosion explosion(game.renderer);
+    ExplosionCreator explosionCreator;
     Timer timer;
     timer.start();
 
@@ -310,6 +329,7 @@ int main(int argc, char* args[])
 
             bomb.handle_input(game.event);
             explosion.handle_input(game.event);
+            explosionCreator.handle_input(game.event, game.renderer);
         }
 
 
@@ -321,6 +341,7 @@ int main(int argc, char* args[])
 
         bomb.draw(game.renderer, animationFrame, (int)avgFPS);
         explosion.draw(game.renderer, animationFrame, (int)avgFPS);
+        explosionCreator.draw(game.renderer, animationFrame, (int)avgFPS);
 
         if(avgFPS != 0){
             avgDt = 1.0/(float)avgFPS;
