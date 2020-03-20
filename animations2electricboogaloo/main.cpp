@@ -56,6 +56,18 @@ public:
         time = 0;
     }
 
+    void stop(){
+        stopped = true;
+    }
+
+    void run(){
+        stopped = false;
+    }
+
+    bool isRunning(){
+        return !stopped;
+    }
+
     void handle_input(SDL_Event e){
         if(e.type == SDL_MOUSEBUTTONDOWN){
             if(e.button.button == SDL_BUTTON_LEFT && !this->clicked){
@@ -64,6 +76,7 @@ public:
                 clicked = true;    
             }
         }
+
         if(e.type == SDL_MOUSEBUTTONUP){
             if(e.button.button == SDL_BUTTON_LEFT && this->clicked){
                 printf("click up\n");
@@ -84,11 +97,10 @@ private:
     int totalTextureFrames = textureFrames_columns*textureFrames_rows;
     SDL_Rect src_rct;
     SDL_Rect dst_rct = {100,100,200,200};
-    int current_src_x = 0;
-    int current_src_y = 0;
     int frame_time_jump;
     
     bool paused = false;
+    bool clicked = false;
 
     void load_texture(SDL_Renderer* r, std::string file_name){
         SDL_Surface* tmp_srf = IMG_Load(file_name.c_str());
@@ -104,24 +116,7 @@ private:
         SDL_FreeSurface(tmp_srf);
     }
 public:
-    AnimatedTimeSprite(){
-        dst_rct.x = 100;
-        dst_rct.y = 100;
-        
-        anim_timer.set_limit(2000);   
-        frame_time_jump = (int)((float)anim_timer.get_limit()/(float)totalTextureFrames);
-    }
-
-    AnimatedTimeSprite(int animation_time){
-        AnimatedTimeSprite();
-        src_rct.w = 32; //this should be an hipotetical tile_size         
-        src_rct.h = 32; //same
-        anim_timer.set_limit(animation_time);
-        frame_time_jump = (int)((float)anim_timer.get_limit()/(float)totalTextureFrames);
-    }
-    
     AnimatedTimeSprite(SDL_Renderer* r, std::string file_name, int tfc, int tfr, int w, int h, int animation_time){
-        AnimatedTimeSprite();
         textureFrames_columns = tfc;
         textureFrames_rows = tfr;
         totalTextureFrames = textureFrames_columns*textureFrames_rows;
@@ -138,9 +133,21 @@ public:
         frame_time_jump = (int)((float)anim_timer.get_limit()/(float)totalTextureFrames);
 
         load_texture(r, file_name);
+        
     }
 
+    AnimatedTimeSprite(){
+        dst_rct.x = 100;
+        dst_rct.y = 100;
+        
+        anim_timer.set_limit(2000);   
+        frame_time_jump = (int)((float)anim_timer.get_limit()/(float)totalTextureFrames);
+    }
 
+    ~AnimatedTimeSprite(){
+        SDL_DestroyTexture(texture);
+        texture = nullptr;
+    }
 
     void update(int dt){
         anim_timer.add_time(dt);
@@ -156,6 +163,31 @@ public:
         dst_rct.y = y;
     }
 
+    void TESTING_handle_input(SDL_Event e){
+        if(e.type == SDL_MOUSEBUTTONDOWN){
+            if(e.button.button == SDL_BUTTON_LEFT && !this->clicked){
+                if(anim_timer.isRunning()){
+                    anim_timer.stop();
+                    anim_timer.reset();
+                } else {
+                    anim_timer.run();
+                }
+
+                printf("horse anim timer stopped\n");
+                this->clicked = true;
+            }
+
+        }
+
+        if(e.type == SDL_MOUSEBUTTONUP){
+            if(e.button.button == SDL_BUTTON_LEFT && this->clicked){
+                printf("horse anim click up\n");
+                this->clicked = false;
+
+            }
+        }
+    }
+
     void draw(SDL_Renderer* r){
         SDL_RenderCopyEx(r, texture, &src_rct, &dst_rct, 0, 0, SDL_FLIP_NONE);
     }
@@ -167,14 +199,22 @@ int main(int argc, char* args[])
     Game game;
     game.init("test", 640, 480);
     log_system.init();
+
+    //SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Testing", "HELLO", NULL);
+
     
     Timer timer;
     timer.start();
     AnimationTimer animTimer(5*1000);
-    AnimatedTimeSprite my_animated_sprite(game.renderer, "dynamite_corrected.png", 5, 1, 200, 200, 1*1000);
+    //AnimatedTimeSprite my_animated_sprite(game.renderer, "dynamite_corrected.png", 5, 1, 200, 200, 1*1000);
 
-    AnimatedTimeSprite horse(game.renderer, "horse.png", 20, 1, 100, 100, 1*1000);
-    horse.TESTING_set_position(240, 240);
+    AnimatedTimeSprite horse(game.renderer, "horse.png", 19, 1, 100, 100, 1*2000);
+    AnimatedTimeSprite horse1(game.renderer, "horse.png", 19, 1, 100, 100, 1*1000);
+    AnimatedTimeSprite horse2(game.renderer, "horse.png", 19, 1, 100, 100, 1*500);
+
+    horse.TESTING_set_position(240, 140);
+    horse1.TESTING_set_position(240, 250);
+    horse2.TESTING_set_position(240, 360);
 
     int frame = 0;
     int animationFrame = 0;
@@ -194,7 +234,6 @@ int main(int argc, char* args[])
     Uint32 dt = 0;
 
     int fps = 0;
-
     while(game.running){
         start_time_frame = SDL_GetTicks();
         
@@ -209,6 +248,7 @@ int main(int argc, char* args[])
             }
 
             animTimer.handle_input(game.event);
+            horse.TESTING_handle_input(game.event);
         
         }
 
@@ -225,11 +265,15 @@ int main(int argc, char* args[])
         }
 
         animTimer.add_time(dt);
-        my_animated_sprite.update(dt);
-        my_animated_sprite.draw(game.renderer);
+        //my_animated_sprite.update(dt);
+        //my_animated_sprite.draw(game.renderer);
 
         horse.update(dt);
         horse.draw(game.renderer);
+        horse1.update(dt);
+        horse1.draw(game.renderer);
+        horse2.update(dt);
+        horse2.draw(game.renderer);
 
         if(log){
             log_system.update_text("AVG_FPS", std::to_string(avgFPS), game.renderer);
@@ -237,7 +281,7 @@ int main(int argc, char* args[])
             log_system.update_text("DT", std::to_string(dt), game.renderer);
             log_system.update_text("FPS", std::to_string(fps), game.renderer);
             log_system.update_text("ANIM_SPR_TIME", std::to_string(animTimer.get_time()), game.renderer);
-            log_system.update_text("SPRITE_X", std::to_string(my_animated_sprite.TESTING_get_src_x()), game.renderer);
+            //log_system.update_text("SPRITE_X", std::to_string(my_animated_sprite.TESTING_get_src_x()), game.renderer);
 
 
             log_system.draw(game.renderer);

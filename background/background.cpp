@@ -1,13 +1,13 @@
-#include <vector>
+#include "background.h"
 
-class Layer;
+Background::Background(){
 
-class Background
-{
-private:
-	std::vector<Layer> layers;
-public:
-	Background(){}
-	~Background(){}
+}
+
+Background::~Background(){
 	
-};
+}
+
+Background::add_layer(Layer layer){
+	layer.push_back(layer);
+}
