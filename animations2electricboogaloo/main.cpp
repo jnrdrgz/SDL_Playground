@@ -133,7 +133,7 @@ public:
         frame_time_jump = (int)((float)anim_timer.get_limit()/(float)totalTextureFrames);
 
         load_texture(r, file_name);
-        
+
     }
 
     AnimatedTimeSprite(){
@@ -142,6 +142,7 @@ public:
         
         anim_timer.set_limit(2000);   
         frame_time_jump = (int)((float)anim_timer.get_limit()/(float)totalTextureFrames);
+
     }
 
     ~AnimatedTimeSprite(){
@@ -151,11 +152,32 @@ public:
 
     void update(int dt){
         anim_timer.add_time(dt);
-        src_rct.x = ((int)((float)anim_timer.get_time()/(float)frame_time_jump)) * src_rct.w;
+        //src_rct.x = ((int)((float)anim_timer.get_time()/(float)frame_time_jump)) * src_rct.w;
+
+        int frame = ((int)((float)anim_timer.get_time()/(float)frame_time_jump));
+        int horizontal_ftj = (frame % textureFrames_columns);
+        int vertical_ftj = ((int) ((float)frame / (float)textureFrames_columns) );
+        
+        //if(vertical_ftj == textureFrames_columns-1 && 1/*if last_hor*/){
+
+        //}
+        //src_rct.x = ((int)((float)anim_timer.get_time()/ (float)frame_time_jump)) * src_rct.w;
+        src_rct.x = horizontal_ftj * src_rct.w;
+        src_rct.y = vertical_ftj * src_rct.h;
     }
 
     int TESTING_get_src_x(){
+        int frame = ((int)((float)anim_timer.get_time()/(float)frame_time_jump));
+        int horizontal_ftj = (frame % textureFrames_columns);
+        
         return src_rct.x;
+    }
+
+    int TESTING_get_src_y(){
+        int frame = ((int)((float)anim_timer.get_time()/(float)frame_time_jump));
+        int vertical_ftj = ((int) ((float)frame / (float)textureFrames_columns) );
+        
+        return src_rct.y;
     }
 
     void TESTING_set_position(int x, int y){
@@ -201,14 +223,13 @@ int main(int argc, char* args[])
     log_system.init();
 
     //SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Testing", "HELLO", NULL);
-
     
     Timer timer;
     timer.start();
     AnimationTimer animTimer(5*1000);
     //AnimatedTimeSprite my_animated_sprite(game.renderer, "dynamite_corrected.png", 5, 1, 200, 200, 1*1000);
 
-    AnimatedTimeSprite horse(game.renderer, "horse.png", 19, 1, 100, 100, 1*2000);
+    AnimatedTimeSprite horse(game.renderer, "horse.png", 20, 12, 100, 100, 8*1000);
     AnimatedTimeSprite horse1(game.renderer, "horse.png", 19, 1, 100, 100, 1*1000);
     AnimatedTimeSprite horse2(game.renderer, "horse.png", 19, 1, 100, 100, 1*500);
 
@@ -226,6 +247,7 @@ int main(int argc, char* args[])
     log_system.add_text("FPS", "", game.renderer);
     log_system.add_text("ANIM_SPR_TIME", "", game.renderer);
     log_system.add_text("SPRITE_X", "", game.renderer);
+    log_system.add_text("SPRITE_Y", "", game.renderer);
 
     float avgDt = 0;
 
@@ -281,7 +303,8 @@ int main(int argc, char* args[])
             log_system.update_text("DT", std::to_string(dt), game.renderer);
             log_system.update_text("FPS", std::to_string(fps), game.renderer);
             log_system.update_text("ANIM_SPR_TIME", std::to_string(animTimer.get_time()), game.renderer);
-            //log_system.update_text("SPRITE_X", std::to_string(my_animated_sprite.TESTING_get_src_x()), game.renderer);
+            log_system.update_text("SPRITE_X", std::to_string(horse.TESTING_get_src_x()), game.renderer);
+            log_system.update_text("SPRITE_Y", std::to_string(horse.TESTING_get_src_y()), game.renderer);
 
 
             log_system.draw(game.renderer);
