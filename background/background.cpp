@@ -8,6 +8,6 @@ Background::~Background(){
 	
 }
 
-Background::add_layer(Layer layer){
-	layer.push_back(layer);
+void Background::add_layer(Layer layer){
+	layers.push_back(layer);
 }

@@ -98,9 +98,11 @@ private:
     SDL_Rect src_rct;
     SDL_Rect dst_rct = {100,100,200,200};
     int frame_time_jump;
-    
+    int initial_frame = 0;
+
     bool paused = false;
     bool clicked = false;
+
 
     void load_texture(SDL_Renderer* r, std::string file_name){
         SDL_Surface* tmp_srf = IMG_Load(file_name.c_str());
@@ -116,7 +118,7 @@ private:
         SDL_FreeSurface(tmp_srf);
     }
 public:
-    AnimatedTimeSprite(SDL_Renderer* r, std::string file_name, int tfc, int tfr, int w, int h, int animation_time){
+    AnimatedTimeSprite(SDL_Renderer* r, std::string file_name, int init_f, int tfc, int tfr, int w, int h, int animation_time){
         textureFrames_columns = tfc;
         textureFrames_rows = tfr;
         totalTextureFrames = textureFrames_columns*textureFrames_rows;
@@ -128,6 +130,9 @@ public:
         src_rct.y = 0;
         src_rct.w = w;
         src_rct.h = h;
+
+        initial_frame = init_f;
+
 
         anim_timer.set_limit(animation_time);
         frame_time_jump = anim_timer.get_limit()/totalTextureFrames;
@@ -155,6 +160,7 @@ public:
         //src_rct.x = ((int)((float)anim_timer.get_time()/(float)frame_time_jump)) * src_rct.w;
 
         int frame = anim_timer.get_time()/frame_time_jump;
+        frame += initial_frame;
         int horizontal_ftj = frame % textureFrames_columns;
         int vertical_ftj = frame / textureFrames_columns;
 
@@ -168,17 +174,19 @@ public:
     }
 
     int TESTING_get_src_x(){
-        int frame = ((int)((float)anim_timer.get_time()/(float)frame_time_jump));
-        int horizontal_ftj = (frame % textureFrames_columns);
+        int frame = anim_timer.get_time()/frame_time_jump;
+        frame += initial_frame;
+        int horizontal_ftj = frame % textureFrames_columns;
         
-        return src_rct.x;
+        return horizontal_ftj;
     }
 
     int TESTING_get_src_y(){
-        int frame = ((int)((float)anim_timer.get_time()/(float)frame_time_jump));
-        int vertical_ftj = ((int) ((float)frame / (float)textureFrames_columns) );
-        
-        return src_rct.y;
+        int frame = anim_timer.get_time()/frame_time_jump;
+        frame += initial_frame;
+        int vertical_ftj = frame / textureFrames_columns;
+
+        return vertical_ftj;
     }
 
     void TESTING_set_position(int x, int y){
@@ -191,7 +199,7 @@ public:
             if(e.button.button == SDL_BUTTON_LEFT && !this->clicked){
                 if(anim_timer.isRunning()){
                     anim_timer.stop();
-                    anim_timer.reset();
+                    //anim_timer.reset();
                 } else {
                     anim_timer.run();
                 }
@@ -230,9 +238,15 @@ int main(int argc, char* args[])
     AnimationTimer animTimer(5*1000);
     //AnimatedTimeSprite my_animated_sprite(game.renderer, "dynamite_corrected.png", 5, 1, 200, 200, 1*1000);
 
-    AnimatedTimeSprite horse(game.renderer, "horse.png", 20, 12, 100, 100, 8*1000);
-    AnimatedTimeSprite horse1(game.renderer, "horse.png", 19, 1, 100, 100, 1*1000);
-    AnimatedTimeSprite horse2(game.renderer, "horse.png", 19, 1, 100, 100, 1*500);
+    AnimatedTimeSprite horse1(game.renderer, "horse.png", 0, 20, 12, 100, 100, 8*1000);
+    AnimatedTimeSprite horse(game.renderer, "horse.png", 50, 19, 3, 100, 100, 5*1000);
+    AnimatedTimeSprite horse2(game.renderer, "horse.png", 116, 19, 1, 100, 100, 1*500);
+
+
+    //horse running right 0,25
+    //horse turning to left 50,115
+    //horse running left 116,140
+    //horse turning to right 177, 240
 
     horse.TESTING_set_position(240, 140);
     horse1.TESTING_set_position(240, 250);
