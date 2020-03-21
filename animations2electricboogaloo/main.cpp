@@ -130,7 +130,7 @@ public:
         src_rct.h = h;
 
         anim_timer.set_limit(animation_time);
-        frame_time_jump = (int)((float)anim_timer.get_limit()/(float)totalTextureFrames);
+        frame_time_jump = anim_timer.get_limit()/totalTextureFrames;
 
         load_texture(r, file_name);
 
@@ -141,7 +141,7 @@ public:
         dst_rct.y = 100;
         
         anim_timer.set_limit(2000);   
-        frame_time_jump = (int)((float)anim_timer.get_limit()/(float)totalTextureFrames);
+        frame_time_jump = anim_timer.get_limit()/totalTextureFrames;
 
     }
 
@@ -154,10 +154,11 @@ public:
         anim_timer.add_time(dt);
         //src_rct.x = ((int)((float)anim_timer.get_time()/(float)frame_time_jump)) * src_rct.w;
 
-        int frame = ((int)((float)anim_timer.get_time()/(float)frame_time_jump));
-        int horizontal_ftj = (frame % textureFrames_columns);
-        int vertical_ftj = ((int) ((float)frame / (float)textureFrames_columns) );
-        
+        int frame = anim_timer.get_time()/frame_time_jump;
+        int horizontal_ftj = frame % textureFrames_columns;
+        int vertical_ftj = frame / textureFrames_columns;
+
+
         //if(vertical_ftj == textureFrames_columns-1 && 1/*if last_hor*/){
 
         //}
