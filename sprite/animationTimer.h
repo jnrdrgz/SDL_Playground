@@ -10,6 +10,7 @@ private:
     int animation_time;
     bool clicked;
     bool stopped;
+    bool finished_one_cycle;
 
 public:
     AnimationTimer(){
@@ -17,6 +18,7 @@ public:
         animation_time = 1000;
         clicked = false;
         stopped = false;
+        finished_one_cycle = false;
     }
 
     AnimationTimer(int animation_time){
@@ -24,16 +26,24 @@ public:
         this->animation_time = animation_time;
         clicked = false;
         stopped = false;
+        finished_one_cycle = false;
     }
 
     void add_time(Uint32 dt){
         if(!stopped){
             time += dt;
             if(time > animation_time){
+                finished_one_cycle = true;
+                
                 reset();
             }
         }
     }
+
+    bool finished(){
+        return finished_one_cycle;
+    }
+
 
     int get_time(){
         return time;
@@ -48,6 +58,7 @@ public:
     }
 
     void reset(){
+        //finished_one_cycle = false;
         time = 0;
     }
 

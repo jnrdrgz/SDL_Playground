@@ -13,6 +13,7 @@ private:
     std::unordered_map<std::string, Sprite> sprites;
     Sprite current_sprite;
     InputHandler* inputHandler;
+    std::string current_sprite_tag;
 
 public:
     void add_sprite(std::string name, Sprite sprite){
@@ -28,7 +29,13 @@ public:
     }
 
     void set_current_sprite(Sprite sprite){
-        current_sprite = sprite;
+        if(!(sprite == current_sprite)){
+            current_sprite = sprite;
+        }
+    }
+
+    bool current_sprite_finished_animation(){
+        return current_sprite.animiation_finished();
     }
 
     void set_position(int x, int y){
@@ -61,7 +68,8 @@ public:
     bool running_left = false;
     bool turning_right = false;
     bool turning_left = false;
-    int velocity = 2;
+    int x_velocity = 2;
+    int y_velocity = 0;
 
     Horse(SDL_Renderer* renderer){
         
@@ -74,12 +82,12 @@ public:
         **********************/
 
         Sprite horse_running_right(renderer, "horse.png", 0, 25, 20, 100, 100, 1*1000);
-        Sprite horse_turning_left(renderer, "horse.png", 50, 115-50, 20, 100, 100, 2*1000);
-        Sprite horse_running_left(renderer, "horse.png", 116, 140-116, 20, 100, 100, 1*1000);
+        Sprite horse_turning_left(renderer, "horse.png", 49, 115-50, 20, 100, 100, 2*1000);
+        Sprite horse_running_left(renderer, "horse.png", 116, 141-116, 20, 100, 100, 1*1000);
         Sprite horse_turning_right(renderer, "horse.png", 177, 240-177, 20, 100, 100, 2*1000);
 
         add_sprite("running_right", horse_running_right);
-        add_sprite("turning_right", horse_turning_left);
+        add_sprite("turning_left", horse_turning_left);
         add_sprite("running_left", horse_running_left);
         add_sprite("turning_right", horse_turning_right);
 
@@ -97,17 +105,35 @@ public:
         update_sprite_animation(dt);
         draw(renderer);
 
-        int new_x = get_x()+velocity;
-
-        
+        int new_x = get_x()+x_velocity;
+        int new_y = get_y()+y_velocity;
 
         if(new_x > 640-100){
-            running_left = true;
-            velocity = -2;
+            //running_left = true;
+            y_velocity = -1;
+            x_velocity = -1;
+            turning_left = true;
         }
         else if(new_x < 0){
-            running_right = true;
-            velocity = 2;
+            //running_right = true;
+            //x_velocity = 2;
+            y_velocity = 1;
+            x_velocity = 1;
+            turning_right = true;
+        } else if(turning_left){
+            if(current_sprite_finished_animation()){
+                turning_left = false;
+                running_left = true;
+                x_velocity = -2;
+                y_velocity = 0;
+            }
+        } else if(turning_right){
+            if(current_sprite_finished_animation()){
+                turning_right = false;
+                running_right = true;
+                x_velocity = 2;
+                y_velocity = 0;
+            }
         }
 
         if(running_right){
@@ -118,9 +144,17 @@ public:
             set_current_sprite(get_sprite("running_left"));
             running_left = false;
         }
+        if(turning_left){
+            set_current_sprite(get_sprite("turning_left"));
+            //running_left = false;
+        }
+        if(turning_right){
+            set_current_sprite(get_sprite("turning_right"));
+            //running_left = false;
+        }
 
 
-        set_position(new_x, get_y());
+        set_position(new_x, new_y);
         
     }
 };

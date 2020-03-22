@@ -25,6 +25,9 @@ private:
     bool paused = false;
     bool clicked = false;
 
+    std::string file_name;
+
+
 
     void load_texture(SDL_Renderer* r, std::string file_name){
         SDL_Surface* tmp_srf = IMG_Load(file_name.c_str());
@@ -41,6 +44,10 @@ private:
     }
 
 public:
+    int get_total_frames() const { return totalTextureFrames; }
+    int get_initial_frame() const { return initial_frame; }
+    std::string get_file_name() const { return file_name; }
+
     Sprite(SDL_Renderer* r, std::string file_name, int init_f, int total_frames, int tfc, int w, int h, int animation_time){
         textureFrames_columns = tfc;
         totalTextureFrames = total_frames;
@@ -55,6 +62,7 @@ public:
 
         initial_frame = init_f;
 
+        this->file_name = file_name; 
 
         anim_timer.set_limit(animation_time);
         frame_time_jump = anim_timer.get_limit()/totalTextureFrames;
@@ -72,9 +80,19 @@ public:
 
     }
 
+    bool operator==(const Sprite& sprite) const {
+        return sprite.get_total_frames()==totalTextureFrames && 
+               sprite.get_file_name()==file_name && 
+               sprite.get_initial_frame()==initial_frame; 
+    }
+
     ~Sprite(){
         //SDL_DestroyTexture(texture);
         //texture = nullptr;
+    }
+
+    void reset_timer(){
+        anim_timer.reset();
     }
 
     void update(int dt){
@@ -138,6 +156,10 @@ public:
 
             }
         }
+    }
+
+    bool animiation_finished(){
+        return anim_timer.finished();
     }
 
     void draw(SDL_Renderer* r){

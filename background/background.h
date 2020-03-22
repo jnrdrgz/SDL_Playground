@@ -9,6 +9,7 @@ class Background
 {
 private:
 	std::vector<Layer> layers;
+	int reference; //the object to follow
 public:
 	Background();
 	~Background();
