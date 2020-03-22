@@ -118,10 +118,9 @@ private:
         SDL_FreeSurface(tmp_srf);
     }
 public:
-    AnimatedTimeSprite(SDL_Renderer* r, std::string file_name, int init_f, int tfc, int tfr, int w, int h, int animation_time){
+    AnimatedTimeSprite(SDL_Renderer* r, std::string file_name, int init_f, int total_frames, int tfc, int w, int h, int animation_time){
         textureFrames_columns = tfc;
-        textureFrames_rows = tfr;
-        totalTextureFrames = textureFrames_columns*textureFrames_rows;
+        totalTextureFrames = total_frames;
 
         dst_rct.w = w;
         dst_rct.h = h;
@@ -238,9 +237,12 @@ int main(int argc, char* args[])
     AnimationTimer animTimer(5*1000);
     //AnimatedTimeSprite my_animated_sprite(game.renderer, "dynamite_corrected.png", 5, 1, 200, 200, 1*1000);
 
-    AnimatedTimeSprite horse1(game.renderer, "horse.png", 0, 20, 12, 100, 100, 8*1000);
-    AnimatedTimeSprite horse(game.renderer, "horse.png", 50, 19, 3, 100, 100, 5*1000);
-    AnimatedTimeSprite horse2(game.renderer, "horse.png", 116, 19, 1, 100, 100, 1*500);
+    //AnimatedTimeSprite(rrenderer, file_name, init_f, total_frames, tfc, int w, int h, int animation_time)
+    
+    AnimatedTimeSprite horse(game.renderer, "horse.png", 0, 25, 20, 100, 100, 1*1000);
+    AnimatedTimeSprite horse1(game.renderer, "horse.png", 50, 115-50, 20, 100, 100, 2*1000);
+    AnimatedTimeSprite horse2(game.renderer, "horse.png", 116, 140-116, 20, 100, 100, 1*1000);
+    AnimatedTimeSprite horse3(game.renderer, "horse.png", 177, 240-177, 20, 100, 100, 2*1000);
 
 
     //horse running right 0,25
@@ -248,9 +250,10 @@ int main(int argc, char* args[])
     //horse running left 116,140
     //horse turning to right 177, 240
 
-    horse.TESTING_set_position(240, 140);
-    horse1.TESTING_set_position(240, 250);
-    horse2.TESTING_set_position(240, 360);
+    horse.TESTING_set_position(240, 30);
+    horse1.TESTING_set_position(240, 140);
+    horse2.TESTING_set_position(240, 250);
+    horse3.TESTING_set_position(240, 360);
 
     int frame = 0;
     int animationFrame = 0;
@@ -311,6 +314,8 @@ int main(int argc, char* args[])
         horse1.draw(game.renderer);
         horse2.update(dt);
         horse2.draw(game.renderer);
+        horse3.update(dt);
+        horse3.draw(game.renderer);
 
         if(log){
             log_system.update_text("AVG_FPS", std::to_string(avgFPS), game.renderer);
