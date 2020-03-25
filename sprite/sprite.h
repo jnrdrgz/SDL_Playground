@@ -133,6 +133,10 @@ public:
         dst_rct.y = y;
     }
 
+    SDL_Rect get_rct(){
+        return dst_rct;
+    }
+
     void TESTING_handle_input(SDL_Event e){
         if(e.type == SDL_MOUSEBUTTONDOWN){
             if(e.button.button == SDL_BUTTON_LEFT && !this->clicked){
@@ -169,6 +173,18 @@ public:
         SDL_RenderCopyEx(r, texture, &src_rct, &dst_rct, 0, 0, SDL_FLIP_NONE);
     }
 
+    void stop(){
+        anim_timer.stop();
+        anim_timer.reset();
+    }
+
+    void freeze(){
+        anim_timer.stop();
+    }
+
+    void run(){
+        anim_timer.run();
+    }
 };
 
 #endif

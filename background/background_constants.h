@@ -1,0 +1,5 @@
+#ifndef BACKGROUND_CONSTANTS_H
+#define BACKGROUND_CONSTANTS_H
+
+enum class CameraType {STATIC, SCROLLING, FIXED, LOOPER};
+#endif
