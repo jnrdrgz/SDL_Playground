@@ -19,6 +19,9 @@ private:
     int animation_speed = 0;////->>>>>
 
 public:
+    int x_velocity = 0;
+    int y_velocity = 0;
+
     void add_sprite(std::string name, Sprite sprite){
         sprites[name] = sprite;
     }
@@ -27,33 +30,37 @@ public:
         current_sprite.draw(renderer);
     }
 
-    Sprite get_sprite(std::string name){
-        return sprites[name];
+    bool current_sprite_finished_animation(){
+        return current_sprite.animiation_finished();
     }
 
+    //get
+    Sprite get_sprite(std::string name){return sprites[name];}
+
+    int get_x(){return rct.x;}
+
+    int get_y(){return rct.y;}
+
+    SDL_Rect get_rct(){return current_sprite.get_rct();}
+    
+    int get_vel_x(){return x_velocity;}
+    int get_vel_y(){return y_velocity;}
+
+    //set
     void set_current_sprite(Sprite sprite){
         if(!(sprite == current_sprite)){
             current_sprite = sprite;
         }
     }
-
-    bool current_sprite_finished_animation(){
-        return current_sprite.animiation_finished();
-    }
-
     void set_position(int x, int y){
         current_sprite.TESTING_set_position(x, y);
         rct.x = x;
         rct.y = y;
     }
 
-    int get_x(){
-        return rct.x;
+    void set_anim_vel(int v){
+        current_sprite.set_timer_limit(v);
     }
-    int get_y(){
-        return rct.y;
-    }
-
 
     void update_sprite_animation(Uint32 dt){
         current_sprite.update(dt);
@@ -67,20 +74,16 @@ public:
         current_sprite.run();
     }
 
-    SDL_Rect get_rct(){
-        return current_sprite.get_rct();
-    }
 
     virtual void update(SDL_Renderer* renderer, Uint32 dt){
 
     }
 };
 
-class Horse : GameObject
+class Horse : public GameObject
 {
 public:
-    int x_velocity = 0;
-    int y_velocity = 0;
+    int anim_vel = 1000;
 
     Horse(SDL_Renderer* renderer){
         
@@ -113,6 +116,7 @@ public:
         
         int new_x = get_x()+x_velocity;
         int new_y = get_y()+y_velocity;
+        
         if(!(new_x > 640-150))
             set_position(new_x, new_y);
 
@@ -130,11 +134,44 @@ public:
         y_velocity = y;
     }
 
+    void sum_velocity(int x, int y){
+        x_velocity += x;
+        y_velocity += y;
+    }
+
     void run(){
         GameObject::run();
     }
     void stop(){
         GameObject::stop();
+    }
+
+    void handle_input(SDL_Event event){
+        if(event.type == SDL_KEYDOWN){
+            if(event.key.keysym.sym == SDLK_RIGHT){
+                //set_velocity(10, 0);
+                //run();
+            }
+            if(event.key.keysym.sym == SDLK_LEFT){
+                //set_velocity(-1, 0);
+                //stop();
+            }
+            if(event.key.keysym.sym == SDLK_SPACE){
+                //set_velocity(0, 0);
+                run();
+                //horse.stop();
+            }
+            if (event.key.keysym.sym == SDLK_UP){
+                sum_velocity(3,0);
+                anim_vel -= 200;
+                GameObject::set_anim_vel(anim_vel);
+            }
+            if (event.key.keysym.sym == SDLK_DOWN){
+                sum_velocity(-3,0);
+                anim_vel += 200;
+                GameObject::set_anim_vel(anim_vel);
+            }
+        }
     }
 
 };
@@ -175,9 +212,9 @@ public:
     }
 
     //scroll following a reference object or rct
-    void reference_scroll(SDL_Rect reference){
-        if(reference.x > 640-200){
-            scroll(10);
+    void reference_scroll(GameObject object){
+        if(object.get_rct().x > 640-200){
+            scroll(object.get_vel_x());
         }
     }
 
@@ -228,30 +265,14 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_QUIT){
                 game.running = false;
             }
-            if(game.event.type == SDL_MOUSEMOTION){
-                
-            }
-            if(game.event.type == SDL_KEYDOWN){
-                if(game.event.key.keysym.sym == SDLK_RIGHT){
-                    horse.set_velocity(10, 0);
-                    horse.run();
-                }
-                if(game.event.key.keysym.sym == SDLK_LEFT){
-                    horse.set_velocity(-1, 0);
-                    horse.stop();
-                }
-                if(game.event.key.keysym.sym == SDLK_SPACE){
-                    horse.set_velocity(0, 0);
-                    //horse.stop();
-                }
-            }
+            horse.handle_input(game.event);
         }
 
         background.draw(game.renderer);
         
         horse.update(game.renderer, dt);
 
-        background.reference_scroll(horse.get_rct());
+        background.reference_scroll(horse);
 
         log_system.update_text("Laps", std::to_string(background.laps), game.renderer);
         log_system.draw(game.renderer);

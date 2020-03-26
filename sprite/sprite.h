@@ -96,10 +96,7 @@ public:
         anim_timer.reset();
     }
 
-    void set_static_sprite(int static_frame){
-        this->static_frame = static_frame; 
-    }
-
+    
     void update(int dt){
         anim_timer.add_time(dt);
         
@@ -140,14 +137,11 @@ public:
         dst_rct.y = y;
     }
 
-    void set_size(int w, int h){
-        dst_rct.w = w;
-        dst_rct.h = h;
-    }
 
     SDL_Rect get_rct(){
         return dst_rct;
     }
+
 
     void TESTING_handle_input(SDL_Event e){
         if(e.type == SDL_MOUSEBUTTONDOWN){
@@ -197,6 +191,22 @@ public:
     void run(){
         anim_timer.run();
     }
+
+    void set_size(int w, int h){
+        dst_rct.w = w;
+        dst_rct.h = h;
+    }
+
+    void set_static_sprite(int static_frame){
+        this->static_frame = static_frame; 
+    }
+
+    void set_timer_limit(int animation_time){
+        anim_timer.set_limit(animation_time);
+        frame_time_jump = anim_timer.get_limit()/totalTextureFrames;
+    }
+
 };
+
 
 #endif
