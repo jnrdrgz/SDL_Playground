@@ -27,7 +27,7 @@ private:
 
     std::string file_name;
 
-
+    int static_frame;
 
     void load_texture(SDL_Renderer* r, std::string file_name){
         SDL_Surface* tmp_srf = IMG_Load(file_name.c_str());
@@ -61,6 +61,7 @@ public:
         src_rct.h = h;
 
         initial_frame = init_f;
+        static_frame = 0;
 
         this->file_name = file_name; 
 
@@ -95,18 +96,24 @@ public:
         anim_timer.reset();
     }
 
+    void set_static_sprite(int static_frame){
+        this->static_frame = static_frame; 
+    }
+
     void update(int dt){
         anim_timer.add_time(dt);
         
+        int frame = static_frame;
+        if(anim_timer.isRunning()){
+            frame = anim_timer.get_time()/frame_time_jump;
+            frame += initial_frame;
+        }
 
-        int frame = anim_timer.get_time()/frame_time_jump;
-        frame += initial_frame;
         int horizontal_ftj = frame % textureFrames_columns;
         int vertical_ftj = frame / textureFrames_columns;
         
         src_rct.x = horizontal_ftj * src_rct.w;
         src_rct.y = vertical_ftj * src_rct.h;
-
         //printf("%d, %d, %d, %d\n", src_rct.x, src_rct.y, src_rct.w, src_rct.h );
         //printf("%d, %d, %d, %d\n", dst_rct.x, dst_rct.y, dst_rct.w, dst_rct.h );
         //printf("%d\n", anim_timer.get_time());
@@ -131,6 +138,11 @@ public:
     void TESTING_set_position(int x, int y){
         dst_rct.x = x;
         dst_rct.y = y;
+    }
+
+    void set_size(int w, int h){
+        dst_rct.w = w;
+        dst_rct.h = h;
     }
 
     SDL_Rect get_rct(){

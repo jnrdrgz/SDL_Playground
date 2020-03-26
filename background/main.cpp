@@ -93,11 +93,16 @@ public:
         **********************/
 
         Sprite horse_running_right(renderer, "horse.png", 0, 25, 20, 100, 100, 1*1000);
+        horse_running_right.set_static_sprite(9);
 
         add_sprite("running_right", horse_running_right);
 
+
         set_current_sprite(get_sprite("running_right"));
-        set_position(0, 150);   
+        set_position(0, 180);   
+        horse_running_right.set_size(140,140);
+        
+
         stop();   
 
 
@@ -154,23 +159,25 @@ public:
 
 
     void scroll(int v){
-        if(laps != 10){
-            if(src.x < limit-(640*2)){
-                src.x += v;
+        if(src.x < 640*3){
+            if(laps != 10){
+                if(src.x < limit-(640*2)){
+                    src.x += v;
+                } else {
+                    src.x = 640;
+                    src.x += v;
+                    laps++;
+                }
             } else {
-                src.x = 640;
-                src.x += v;
-                laps++;
+                src.x += 10;
             }
-        } else {
-            src.x += 20;
         }
     }
 
     //scroll following a reference object or rct
     void reference_scroll(SDL_Rect reference){
         if(reference.x > 640-200){
-            scroll(4);
+            scroll(10);
         }
     }
 
@@ -226,12 +233,16 @@ int main(int argc, char* args[])
             }
             if(game.event.type == SDL_KEYDOWN){
                 if(game.event.key.keysym.sym == SDLK_RIGHT){
-                    horse.set_velocity(2, 0);
+                    horse.set_velocity(10, 0);
                     horse.run();
                 }
                 if(game.event.key.keysym.sym == SDLK_LEFT){
-                    horse.set_velocity(0, 0);
+                    horse.set_velocity(-1, 0);
                     horse.stop();
+                }
+                if(game.event.key.keysym.sym == SDLK_SPACE){
+                    horse.set_velocity(0, 0);
+                    //horse.stop();
                 }
             }
         }
