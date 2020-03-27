@@ -7,6 +7,18 @@
 
 static LogSystem log_system = LogSystem();
 
+int distance(int target, int guess){
+    if(target <= guess){
+        return guess-target;
+    } else {
+        return target-guess;
+    }
+}
+
+int get_value(int target, int guess, int maxv){
+    return distance(target, guess)/(target/maxv);  
+}
+
 int main(int argc, char* args[])
 {
     Game game;
@@ -80,7 +92,7 @@ int main(int argc, char* args[])
         
     }*/
 
-    for (int i = 0; i < testW*testH; ++i)
+    /*for (int i = 0; i < testW*testH; ++i)
     {
         pixels[i] = 0;
     }
@@ -93,6 +105,16 @@ int main(int argc, char* args[])
             pixels[i] = rgb;
 
         }
+    }*/
+
+
+    int v2 = (testW*testH)/2;
+    printf("%d\n", v2);
+    for (int i = 0; i < testW*testH; ++i)
+    {
+        b = get_value(v2,i,255);
+        rgb = b+(g<<8)+(r<<16);
+        pixels[i] = rgb;
     }
 
     while(game.running){

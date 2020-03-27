@@ -3,6 +3,8 @@
 #include "../SDL_Needs/game.h"
 #include "../timer.h"
 
+#include <iostream>
+
 static LogSystem log_system = LogSystem();
 
 class BendingBarController
@@ -11,6 +13,38 @@ private:
     SDL_Rect bar;
     SDL_Rect bender;
     int bend_vel = 0;
+
+    int distance(int target, int guess){
+        if(target <= guess){
+            return guess-target;
+        } else {
+            return target-guess;
+        }
+    }
+
+    int get_value(int target, int guess, int maxv){
+        printf("%d,%d,%d\n", target, guess, maxv);
+       return distance(target, guess)/(target/maxv);
+    }
+
+    int bar_stop_n(){
+        return (bar.x+bar.w) - bar.x;
+    }
+
+    int bender_x_within_bar(){
+        return (bender.x+(bender.w/2)) - bar.x;
+    }
+
+    template <typename T> 
+    T t_distance(T target, T guess){ 
+        return (target <= guess) ? guess-target : target-guess;
+    }
+
+    template <typename T> 
+    T t_get_value(T target, T guess, T maxv){
+        return t_distance(target, guess)/(target/maxv);
+    } 
+
 public:
 
     BendingBarController(int x, int y, int w, int h){
@@ -42,19 +76,30 @@ public:
     }
 
     void update(){
-        if(bender.x + bender.w > bar.x + bar.w){
+        /*if(bender.x + bender.w > bar.x + bar.w){
             bend_vel = -2;
         } else if(bender.x < bar.x){
             bend_vel = 2;
+        }*/
+
+        if(bender.x + bender.w > bar.x + bar.w){
+            bend_vel = -1;
+        } else if(bender.x < bar.x){
+            bend_vel = 1;
         }
 
         bender.x += bend_vel;
     }
 
     void handle_input(SDL_Event event){
-    if(event.type == SDL_KEYDOWN){
+        if(event.type == SDL_KEYDOWN){
             if(event.key.keysym.sym == SDLK_i){
+                printf("change\n");
                 bend_vel = 2;
+            }
+            if(event.key.keysym.sym == SDLK_SPACE){
+                printf("%d\n", get_value(50, bender_x_within_bar(), 3));
+                printf("%.2f\n", t_get_value<float>(50.0, (float)bender_x_within_bar(), 3));
             }
         }  
     }
