@@ -1,9 +1,9 @@
-#include "../log_system/log_system.h"
-#include "../SDL_Needs/game.h"
+#include "log_system.h"
+#include "game.h"
 #include <SDL2/SDL.h>
-#include "../sprite/sprite.h"
+#include "sprite.h"
 #include <unordered_map>
-#include "../controllers/bending_bar_controller.h"
+#include "bending_bar_controller.h"
 
 static LogSystem log_system = LogSystem();
 
