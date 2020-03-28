@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include "../sprite/sprite.h"
 #include <unordered_map>
+#include "../controllers/bending_bar_controller.h"
 
 static LogSystem log_system = LogSystem();
 
@@ -22,9 +23,6 @@ public:
     int x_velocity = 0;
     int y_velocity = 0;
 
-    void add_sprite(std::string name, Sprite sprite){
-        sprites[name] = sprite;
-    }
 
     void draw(SDL_Renderer* renderer){      
         current_sprite.draw(renderer);
@@ -62,8 +60,9 @@ public:
         current_sprite.set_timer_limit(v);
     }
 
-    void update_sprite_animation(Uint32 dt){
-        current_sprite.update(dt);
+    //sprite
+    void add_sprite(std::string name, Sprite sprite){
+        sprites[name] = sprite;
     }
 
     void stop(){
@@ -72,6 +71,10 @@ public:
 
     void run(){
         current_sprite.run();
+    }
+
+    void update_sprite_animation(Uint32 dt){
+        current_sprite.update(dt);
     }
 
 
@@ -95,7 +98,7 @@ public:
 
         **********************/
 
-        Sprite horse_running_right(renderer, "horse.png", 0, 25, 20, 100, 100, 1*1000);
+        Sprite horse_running_right(renderer, "horse_filt.png", 0, 25, 20, 100, 100, 1*1000);
         horse_running_right.set_static_sprite(9);
 
         add_sprite("running_right", horse_running_right);
@@ -119,9 +122,15 @@ public:
         
         if(!(new_x > 640-150))
             set_position(new_x, new_y);
+        
+        if(x_velocity <= 0){
+            stop();
+            x_velocity = 0;
+        }
 
         update_sprite_animation(dt);
         draw(renderer);
+
     }
 
     SDL_Rect get_rct(){
@@ -162,13 +171,13 @@ public:
                 //horse.stop();
             }
             if (event.key.keysym.sym == SDLK_UP){
-                sum_velocity(3,0);
-                anim_vel -= 200;
+                sum_velocity(1,0);
+                anim_vel -= 50;
                 GameObject::set_anim_vel(anim_vel);
             }
             if (event.key.keysym.sym == SDLK_DOWN){
-                sum_velocity(-3,0);
-                anim_vel += 200;
+                sum_velocity(-1,0);
+                anim_vel += 50;
                 GameObject::set_anim_vel(anim_vel);
             }
         }
@@ -188,7 +197,7 @@ public:
     
 
     Background(SDL_Renderer* renderer){
-        SDL_Surface* tmp_srf = IMG_Load("back_test.png");
+        SDL_Surface* tmp_srf = IMG_Load("bt2.png");
         image = SDL_CreateTextureFromSurface(renderer, tmp_srf);
         SDL_FreeSurface(tmp_srf);
     }
