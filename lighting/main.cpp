@@ -19,6 +19,16 @@ int get_value(int target, int guess, int maxv){
     return distance(target, guess)/(target/maxv);  
 }
 
+int distance_from_center(int x, int y, int w, int h){
+    int x_dis = distance(w/2, x);
+    int y_dis = distance(h/2, y);
+
+    int p = (x_dis+y_dis)/2;
+    
+    return get_value(w/2, p, 250);
+
+}
+
 int main(int argc, char* args[])
 {
     Game game;
@@ -107,15 +117,60 @@ int main(int argc, char* args[])
         }
     }*/
 
-
-    int v2 = (testW*testH)/2;
+    //wwwwwworked
+    /*int v2 = (testW*testH)/2;
     printf("%d\n", v2);
     for (int i = 0; i < testW*testH; ++i)
     {
         b = get_value(v2,i,255);
         rgb = b+(g<<8)+(r<<16);
         pixels[i] = rgb;
+    }*/
+    //////////
+
+    /*
+
+    for (int i = 0; i < testW*testH; ++i)
+    {
+        b = 255;
+        rgb = b+(g<<8)+(r<<16);
+        pixels[i] = rgb;
+    }*/
+
+    for (int i = 0; i < testH; i++)
+    {
+        for (int j = 0; j < testW; j++)
+        {
+            int index = i+j*testW;
+            //r = j;
+            //g = 0;
+            b = distance_from_center(j,i,testW,testH);
+            rgb = b+(g<<8)+(r<<16);
+            pixels[index] = rgb;
+        }
     }
+
+    /*
+    int v2 = testW/2;
+    printf("%d\n", v2);
+    int gff = 0;
+    for (int i = 0; i < testH; i++)
+    {
+        gff++;
+        b = get_value(v2,i,250);
+        rgb = b+(g<<8)+(r<<16);
+                
+        for (int j = 0; j < testW; j++)
+        {
+            gff++;
+            b = get_value(v2,j,250);
+            if(i != 0){
+                //pixels[j+i+testH] = rgb;
+                pixels[(i*testH)+j] = rgb;
+            }
+        }
+    }
+    printf("n___%d\n", gff);*/
 
     while(game.running){
         
