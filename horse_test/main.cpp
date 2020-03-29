@@ -7,6 +7,7 @@
 #include "gameobject.h"
 #include "components/horse/horsegraphicscomponent.h"
 #include "components/horse/horseinputcomponent.h"
+#include "components/horse/horseupdatecomponent.h"
 
 static LogSystem log_system = LogSystem();
 
@@ -42,7 +43,7 @@ public:
         //horse running right 0,25
     }
 
-    void update(SDL_Renderer* renderer, Uint32 dt) override{
+    void update(SDL_Renderer* renderer, Uint32 dt){
         
         int new_x = get_x()+x_velocity;
         int new_y = get_y()+y_velocity;
@@ -56,7 +57,7 @@ public:
         }
 
         update_sprite_animation(dt);
-        draw(renderer);
+        draw(renderer, dt);
 
     }
 
@@ -182,16 +183,19 @@ int main(int argc, char* args[])
     Background background(game.renderer);
 
     //game objects
-    Horse horse(game.renderer);
+    //Horse horse(game.renderer);
 
-    GameObject ECSHorse(game.renderer, new HorseGraphicsComponent(), new HorseInputComponent());
+    GameObject ECSHorse(game.renderer, 
+        new HorseGraphicsComponent(), 
+        new HorseInputComponent(),
+        new HorseUpdateComponent());
 
     //controllers
     BendingBarController bender_controller(350, 20, 100, 20);
 
     log_system.add_text("Laps", std::to_string(background.laps), game.renderer);
-    log_system.add_text("Horse_VEL", std::to_string(horse.get_vel_x()), game.renderer);
-    log_system.add_text("Horse_ANIMVEL", std::to_string(horse.get_anim_vel()), game.renderer);
+    //log_system.add_text("Horse_VEL", std::to_string(horse.get_vel_x()), game.renderer);
+    //log_system.add_text("Horse_ANIMVEL", std::to_string(horse.get_anim_vel()), game.renderer);
 
     Uint32 start_time_frame = 0;
     Uint32 dt = 0;
@@ -204,26 +208,27 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_QUIT){
                 game.running = false;
             }
-            horse.handle_input(game.event);
+            //horse.handle_input(game.event);
             bender_controller.handle_input(game.event);
+            ECSHorse.handle_input(game.event);
         }
-
+        ECSHorse.update_r(dt);
+        
         background.draw(game.renderer);
         
-        horse.update(game.renderer, dt);
+        //horse.update(game.renderer, dt);
         bender_controller.update();
-        background.reference_scroll(horse);
+        //background.reference_scroll(horse);
 
         bender_controller.draw(game.renderer);
 
-        ECSHorse.draw(game.renderer);
-
+        ECSHorse.draw(game.renderer, dt);
+        
         log_system.update_text("Laps", std::to_string(background.laps), game.renderer);
-        log_system.update_text("Horse_VEL", std::to_string(horse.get_vel_x()), game.renderer);
-        log_system.update_text("Horse_ANIMVEL", std::to_string(horse.get_anim_vel()), game.renderer);
+        //log_system.update_text("Horse_VEL", std::to_string(horse.get_vel_x()), game.renderer);
+        //log_system.update_text("Horse_ANIMVEL", std::to_string(horse.get_anim_vel()), game.renderer);
 
         log_system.draw(game.renderer);
-
 
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);

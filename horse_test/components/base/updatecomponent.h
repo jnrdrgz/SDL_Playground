@@ -6,7 +6,7 @@
 class UpdateComponent
 {
 public:
-    virtual void update(GameObject& g) = 0;
+    virtual void update(GameObject& g, Uint32 dt) = 0;
 };
 
 #endif

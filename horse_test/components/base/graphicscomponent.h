@@ -8,6 +8,6 @@ class GraphicsComponent
 {
 public:
 	virtual void load(GameObject& g, SDL_Renderer *renderer) = 0;
-    virtual void draw(GameObject& g, SDL_Renderer *renderer, int dt) = 0;
+    virtual void draw(GameObject& g, SDL_Renderer *renderer, Uint32 dt) = 0;
 };
 #endif

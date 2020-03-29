@@ -12,7 +12,7 @@ void HorseGraphicsComponent::load(GameObject& g, SDL_Renderer *renderer){
     g.stop();
 }
 
-void HorseGraphicsComponent::draw(GameObject& g, SDL_Renderer *renderer, int dt){
+void HorseGraphicsComponent::draw(GameObject& g, SDL_Renderer *renderer, Uint32 dt){
 	g.update_sprite_animation(dt);
-	g.draw(renderer);
+	g.current_sprite.draw(renderer);
 }

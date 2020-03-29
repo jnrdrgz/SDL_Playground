@@ -1,14 +1,28 @@
 #include "gameobject.h"
 
-GameObject::GameObject(SDL_Renderer* renderer, GraphicsComponent* graphicscomponent, InputComponent* inputcomponent){
+GameObject::GameObject(SDL_Renderer* renderer, 
+                GraphicsComponent* graphicscomponent, 
+                InputComponent* inputcomponent,
+                UpdateComponent* updatecomponent)
+{
     this->inputcomponent = inputcomponent;
     this->graphicscomponent = graphicscomponent;
+    this->updatecomponent = updatecomponent;
 
     graphicscomponent->load(*this, renderer);
 }
 
-void GameObject::draw(SDL_Renderer* renderer){
-    current_sprite.draw(renderer);
+void GameObject::draw(SDL_Renderer* renderer, int dt){
+    if(graphicscomponent != nullptr){
+        graphicscomponent->draw(*this, renderer, dt);
+    } else{
+        current_sprite.draw(renderer);
+    }
+    
+}
+
+void GameObject::handle_input(SDL_Event event){
+    inputcomponent->handle_input(*this, event);
 }
 
 bool GameObject::current_sprite_finished_animation(){
@@ -66,6 +80,10 @@ void GameObject::update_sprite_animation(Uint32 dt){
     current_sprite.update(dt);
 }
 
-void GameObject::update(SDL_Renderer* renderer, Uint32 dt){
+void GameObject::update(SDL_Renderer* renderer){
 
+}
+
+void GameObject::update_r(Uint32 dt){
+    updatecomponent->update(*this, dt);
 }

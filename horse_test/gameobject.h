@@ -6,29 +6,34 @@
 #include "sprite.h"
 #include "components/base/inputcomponent.h"
 #include "components/base/graphicscomponent.h"
+#include "components/base/updatecomponent.h"
 
 class GameObject
 {
 private:
     SDL_Rect rct;
     std::unordered_map<std::string, Sprite> sprites;
-    Sprite current_sprite;
     std::string current_sprite_tag;
 
     InputComponent* inputcomponent = nullptr;
     GraphicsComponent* graphicscomponent = nullptr;
+    UpdateComponent* updatecomponent = nullptr;
 
 public:
+    Sprite current_sprite;
     int x_velocity = 0;
     int y_velocity = 0;
     int anim_vel = 1000;
-
     
     GameObject(){}
-    GameObject(SDL_Renderer* renderer, GraphicsComponent* graphicscomponent, InputComponent* inputcomponent);
+    GameObject(SDL_Renderer* renderer, 
+                GraphicsComponent* graphicscomponent, 
+                InputComponent* inputcomponent,
+                UpdateComponent* updatecomponent);
 
-    void draw(SDL_Renderer* renderer);
-
+    void draw(SDL_Renderer* renderer, int dt);
+    void handle_input(SDL_Event event);
+    
     bool current_sprite_finished_animation();
 
     //get
@@ -58,8 +63,8 @@ public:
 
     void sum_velocity(int x, int y);
 
-
-    virtual void update(SDL_Renderer* renderer, Uint32 dt);
+    virtual void update(SDL_Renderer* renderer);
+    void update_r(Uint32 dt);
 };
 
 #endif
