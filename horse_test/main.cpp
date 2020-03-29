@@ -4,90 +4,17 @@
 #include "sprite.h"
 #include <unordered_map>
 #include "bending_bar_controller.h"
+#include "gameobject.h"
+#include "components/horse/horsegraphicscomponent.h"
+#include "components/horse/horseinputcomponent.h"
 
 static LogSystem log_system = LogSystem();
 
 class InputHandler;
 
-class GameObject
-{
-private:
-    SDL_Rect rct;
-    std::unordered_map<std::string, Sprite> sprites;
-    Sprite current_sprite;
-    InputHandler* inputHandler;
-    std::string current_sprite_tag;
-    int animation_speed = 0;////->>>>>
-
-public:
-    int x_velocity = 0;
-    int y_velocity = 0;
-
-
-    void draw(SDL_Renderer* renderer){      
-        current_sprite.draw(renderer);
-    }
-
-    bool current_sprite_finished_animation(){
-        return current_sprite.animiation_finished();
-    }
-
-    //get
-    Sprite get_sprite(std::string name){return sprites[name];}
-
-    int get_x(){return rct.x;}
-
-    int get_y(){return rct.y;}
-
-    SDL_Rect get_rct(){return current_sprite.get_rct();}
-    
-    int get_vel_x(){return x_velocity;}
-    int get_vel_y(){return y_velocity;}
-
-    //set
-    void set_current_sprite(Sprite sprite){
-        if(!(sprite == current_sprite)){
-            current_sprite = sprite;
-        }
-    }
-    void set_position(int x, int y){
-        current_sprite.TESTING_set_position(x, y);
-        rct.x = x;
-        rct.y = y;
-    }
-
-    void set_anim_vel(int v){
-        current_sprite.set_timer_limit(v);
-    }
-
-    //sprite
-    void add_sprite(std::string name, Sprite sprite){
-        sprites[name] = sprite;
-    }
-
-    void stop(){
-        current_sprite.stop();
-    }
-
-    void run(){
-        current_sprite.run();
-    }
-
-    void update_sprite_animation(Uint32 dt){
-        current_sprite.update(dt);
-    }
-
-
-    virtual void update(SDL_Renderer* renderer, Uint32 dt){
-
-    }
-};
-
 class Horse : public GameObject
 {
 public:
-    int anim_vel = 1000;
-
     Horse(SDL_Renderer* renderer){
         
         /*********************
@@ -257,6 +184,8 @@ int main(int argc, char* args[])
     //game objects
     Horse horse(game.renderer);
 
+    GameObject ECSHorse(game.renderer, new HorseGraphicsComponent(), new HorseInputComponent());
+
     //controllers
     BendingBarController bender_controller(350, 20, 100, 20);
 
@@ -286,6 +215,8 @@ int main(int argc, char* args[])
         background.reference_scroll(horse);
 
         bender_controller.draw(game.renderer);
+
+        ECSHorse.draw(game.renderer);
 
         log_system.update_text("Laps", std::to_string(background.laps), game.renderer);
         log_system.update_text("Horse_VEL", std::to_string(horse.get_vel_x()), game.renderer);

@@ -1,1 +1,1 @@
-g++ -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer game.* log_system.* bending_bar_controller.* text.* animationTimer.h sprite.h timer.h main.cpp -o game && ./game
+g++ -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer *.cpp *.h components/base/*.h components/horse/*.cpp components/horse/*.h -o game && ./game

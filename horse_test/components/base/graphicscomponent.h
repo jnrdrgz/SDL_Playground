@@ -7,7 +7,7 @@
 class GraphicsComponent
 {
 public:
-	virtual void init(GameObject& g, SDL_Renderer *renderer) = 0;
-    virtual void draw(GameObject& g, SDL_Renderer *renderer) = 0;
+	virtual void load(GameObject& g, SDL_Renderer *renderer) = 0;
+    virtual void draw(GameObject& g, SDL_Renderer *renderer, int dt) = 0;
 };
 #endif

@@ -1,0 +1,65 @@
+#ifndef GAMEOBJECT_H
+#define GAMEOBJECT_H
+
+#include <unordered_map>
+#include <string>
+#include "sprite.h"
+#include "components/base/inputcomponent.h"
+#include "components/base/graphicscomponent.h"
+
+class GameObject
+{
+private:
+    SDL_Rect rct;
+    std::unordered_map<std::string, Sprite> sprites;
+    Sprite current_sprite;
+    std::string current_sprite_tag;
+
+    InputComponent* inputcomponent = nullptr;
+    GraphicsComponent* graphicscomponent = nullptr;
+
+public:
+    int x_velocity = 0;
+    int y_velocity = 0;
+    int anim_vel = 1000;
+
+    
+    GameObject(){}
+    GameObject(SDL_Renderer* renderer, GraphicsComponent* graphicscomponent, InputComponent* inputcomponent);
+
+    void draw(SDL_Renderer* renderer);
+
+    bool current_sprite_finished_animation();
+
+    //get
+    Sprite get_sprite(std::string name);
+    SDL_Rect get_rct();
+    
+    //position and velocity
+    int get_x();
+    int get_y();
+    int get_vel_x();
+    int get_vel_y();
+
+    //set
+    void set_current_sprite(Sprite sprite);
+    
+    void set_position(int x, int y);
+
+    void set_anim_vel(int v);
+    
+    //sprite
+    void add_sprite(std::string name, Sprite sprite);
+
+    //animation
+    void stop();
+    void run();
+    void update_sprite_animation(Uint32 dt);
+
+    void sum_velocity(int x, int y);
+
+
+    virtual void update(SDL_Renderer* renderer, Uint32 dt);
+};
+
+#endif
