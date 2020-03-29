@@ -92,9 +92,9 @@ public:
         
         /*********************
 
-        !!!!!!!!!!!!
-        !ADD TEXTURE MANAGER TO NOT LOAD THE SAME TEXTURE FOUR TIMES !!!!!!!!!!!!!!!! 
-        !!!!!!!!!!!!
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!!!!!!!!ADD TEXTURE MANAGER TO NOT LOAD THE SAME TEXTURE FOUR TIMES !!!!!!!! 
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         **********************/
 
@@ -250,19 +250,6 @@ int main(int argc, char* args[])
     int screenH = 480;
     game.init("test", screenW, screenH);
     log_system.init();
-
-    
-    /*SDL_Surface* tmp_srf = IMG_Load("back_test.png");
-    SDL_Texture* background = SDL_CreateTextureFromSurface(game.renderer, tmp_srf);
-    SDL_Rect src = {0,0,640,480};//tmp_srf->w,tmp_srf->h};
-
-    int limit = 640*4;
-    
-    SDL_FreeSurface(tmp_srf);
-
-    SDL_Rect dst = {0,0,screenW, screenH};
-
-    int laps = 0;*/
 
     //background
     Background background(game.renderer);
