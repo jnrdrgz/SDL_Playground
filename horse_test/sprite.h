@@ -13,7 +13,7 @@ class Sprite
 private:
     AnimationTimer anim_timer;
     SDL_Texture* texture = nullptr;
-    
+       
     int textureFrames_columns = 4; //
     int textureFrames_rows = 4; //
     int totalTextureFrames = textureFrames_columns*textureFrames_rows;

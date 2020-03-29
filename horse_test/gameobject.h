@@ -18,7 +18,6 @@ private:
     InputComponent* inputcomponent = nullptr;
     GraphicsComponent* graphicscomponent = nullptr;
     UpdateComponent* updatecomponent = nullptr;
-
 public:
     Sprite current_sprite;
     int x_velocity = 0;
