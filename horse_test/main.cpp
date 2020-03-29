@@ -8,116 +8,9 @@
 #include "components/horse/horsegraphicscomponent.h"
 #include "components/horse/horseinputcomponent.h"
 #include "components/horse/horseupdatecomponent.h"
+#include "components/horse/horseaicomponent.h"
 
 static LogSystem log_system = LogSystem();
-
-class InputHandler;
-
-class Horse : public GameObject
-{
-public:
-    Horse(SDL_Renderer* renderer){
-        
-        /*********************
-
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        !!!!!!!!!ADD TEXTURE MANAGER TO NOT LOAD THE SAME TEXTURE FOUR TIMES !!!!!!!! 
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        **********************/
-
-        Sprite horse_running_right(renderer, "horse_filt.png", 0, 25, 20, 100, 100, 1*1000);
-        horse_running_right.set_static_sprite(9);
-
-        add_sprite("running_right", horse_running_right);
-
-
-        set_current_sprite(get_sprite("running_right"));
-        set_position(0, 180);   
-        horse_running_right.set_size(140,140);
-        
-
-        stop();   
-
-
-        //horse running right 0,25
-    }
-
-    void update(SDL_Renderer* renderer, Uint32 dt){
-        
-        int new_x = get_x()+x_velocity;
-        int new_y = get_y()+y_velocity;
-        
-        if(!(new_x > 640-150))
-            set_position(new_x, new_y);
-        
-        if(x_velocity <= 0){
-            stop();
-            x_velocity = 0;
-        }
-
-        update_sprite_animation(dt);
-        draw(renderer, dt);
-
-    }
-
-    SDL_Rect get_rct(){
-        return GameObject::get_rct();
-    }
-
-
-    void set_velocity(int x, int y){
-        x_velocity = x;
-        y_velocity = y;
-    }
-
-    void sum_velocity(int x, int y){
-        x_velocity += x;
-        y_velocity += y;
-    }
-
-    void run(){
-        GameObject::run();
-    }
-    void stop(){
-        GameObject::stop();
-    }
-
-    int get_anim_vel(){
-        return anim_vel;
-    }
-
-    void handle_input(SDL_Event event){
-        if(event.type == SDL_KEYDOWN){
-            if(event.key.keysym.sym == SDLK_RIGHT){
-                //set_velocity(10, 0);
-                //run();
-            }
-            if(event.key.keysym.sym == SDLK_LEFT){
-                //set_velocity(-1, 0);
-                //stop();
-            }
-            if(event.key.keysym.sym == SDLK_SPACE){
-                //set_velocity(0, 0);
-                run();
-                //horse.stop();
-            }
-            if (event.key.keysym.sym == SDLK_UP){
-                run();
-                
-                sum_velocity(1,0);
-                anim_vel -= 50;
-                GameObject::set_anim_vel(anim_vel);
-            }
-            if (event.key.keysym.sym == SDLK_DOWN){
-                sum_velocity(-1,0);
-                anim_vel += 50;
-                GameObject::set_anim_vel(anim_vel);
-            }
-        }
-    }
-
-};
 
 class Background
 {
@@ -190,6 +83,11 @@ int main(int argc, char* args[])
         new HorseInputComponent(),
         new HorseUpdateComponent());
 
+    GameObject ECSAIHorse(game.renderer, 
+        new HorseGraphicsComponent(), 
+        nullptr,
+        new HorseAIComponent());
+
     //controllers
     BendingBarController bender_controller(350, 20, 100, 20);
 
@@ -212,7 +110,9 @@ int main(int argc, char* args[])
             bender_controller.handle_input(game.event);
             ECSHorse.handle_input(game.event);
         }
+
         ECSHorse.update_r(dt);
+        ECSAIHorse.update_r(dt);
         
         background.draw(game.renderer);
         
@@ -223,6 +123,7 @@ int main(int argc, char* args[])
         bender_controller.draw(game.renderer);
 
         ECSHorse.draw(game.renderer, dt);
+        ECSAIHorse.draw(game.renderer, dt);
         
         log_system.update_text("Laps", std::to_string(background.laps), game.renderer);
         //log_system.update_text("Horse_VEL", std::to_string(horse.get_vel_x()), game.renderer);
