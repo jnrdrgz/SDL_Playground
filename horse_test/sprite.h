@@ -40,6 +40,7 @@ private:
             printf("Error loading texture: \n, %s\n", SDL_GetError());
         }
 
+
         SDL_FreeSurface(tmp_srf);
     }
 
@@ -209,6 +210,10 @@ public:
     void set_timer_limit(int animation_time){
         anim_timer.set_limit(animation_time);
         frame_time_jump = anim_timer.get_limit()/totalTextureFrames;
+    }
+
+    void set_color_mod(Uint8 r, Uint8 g, Uint8 b){
+        SDL_SetTextureColorMod(texture, r, g, b);
     }
 
 };

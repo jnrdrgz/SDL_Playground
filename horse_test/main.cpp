@@ -82,15 +82,16 @@ int main(int argc, char* args[])
         new HorseUpdateComponent());
 
     ECSHorse.set_size(140,140);
-    ECSHorse.set_position(15, 195);
+    ECSHorse.set_position(0, 195);
+    ECSHorse.set_color_mod(255,0,0);
 
     GameObject ECSAIHorse(game.renderer, 
         new HorseGraphicsComponent(), 
         nullptr,
-        new HorseAIComponent());
+        new HorseAIComponent(640*11, 11, 10));
 
     ECSAIHorse.set_size(140,140);
-    ECSAIHorse.set_position(0, 180);  
+    ECSAIHorse.set_position(15, 180);  
 
     //controllers
     BendingBarController bender_controller(350, 20, 100, 20);
@@ -133,8 +134,8 @@ int main(int argc, char* args[])
 
         bender_controller.draw(game.renderer);
 
-        ECSHorse.draw(game.renderer, dt);
         ECSAIHorse.draw(game.renderer, dt);
+        ECSHorse.draw(game.renderer, dt);
         
         log_system.update_text("Laps", std::to_string(background.laps), game.renderer);
         //log_system.update_text("Horse_VEL", std::to_string(horse.get_vel_x()), game.renderer);

@@ -1,7 +1,7 @@
 #include "horsegraphicscomponent.h"
 
 void HorseGraphicsComponent::load(GameObject& g, SDL_Renderer *renderer){
-	Sprite horse_running_right(renderer, "horse_filt.png", 0, 25, 20, 100, 100, 1*1000);
+	Sprite horse_running_right(renderer, "horse_blank.png", 0, 25, 20, 100, 100, 1*1000);
     horse_running_right.set_static_sprite(9);
 
     g.add_sprite("running_right", horse_running_right);

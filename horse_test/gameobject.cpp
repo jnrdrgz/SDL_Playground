@@ -71,6 +71,12 @@ void GameObject::set_size(int w, int h){
     current_sprite.set_size(w, h);
 }
 
+void GameObject::set_color_mod(Uint8 r, Uint8 g, Uint8 b){
+    current_sprite.set_color_mod(r,g,b);
+    for(auto it = sprites.begin(); it != sprites.end(); ++it){
+        it->second.set_color_mod(r,g,b);
+    }
+}
 //sprite
 void GameObject::add_sprite(std::string name, Sprite sprite){
     sprites[name] = sprite;

@@ -8,7 +8,7 @@
 class HorseUpdateComponent : public UpdateComponent
 {
 public:
-    HorseUpdateComponent(){}
+	HorseUpdateComponent(){}
     void update(GameObject& g, Uint32 dt);
 };
 

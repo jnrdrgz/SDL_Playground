@@ -11,8 +11,13 @@ private:
 	int acum = 0;
 	int max_vel = 0;
 	bool runned = false;
+
 public:
-    HorseAIComponent(){}
+	int meters_to_finnish = 0;
+	int laps_to_finnish = 0;
+    int position = 0;
+    
+    HorseAIComponent(int meters_to_finnish, int laps_to_finnish, int max_vel);
     void update(GameObject& g, Uint32 dt);
 };
 

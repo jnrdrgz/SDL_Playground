@@ -52,7 +52,7 @@ public:
     void set_position(int x, int y);
     void set_anim_vel(int v);
     void set_size(int w, int h);
-
+    void set_color_mod(Uint8 r, Uint8 g, Uint8 b);
     
     //sprite
     void add_sprite(std::string name, Sprite sprite);
