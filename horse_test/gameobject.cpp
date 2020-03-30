@@ -21,6 +21,16 @@ void GameObject::draw(SDL_Renderer* renderer, int dt){
     
 }
 
+void GameObject::destroy(){
+    for(auto it = sprites.begin(); it != sprites.end(); ++it){
+        it->second.destroy();
+    }
+    
+    inputcomponent = nullptr;
+    graphicscomponent = nullptr;
+    updatecomponent = nullptr;
+}
+
 void GameObject::handle_input(SDL_Event event){
     inputcomponent->handle_input(*this, event);
 }
@@ -55,6 +65,10 @@ void GameObject::set_position(int x, int y){
 
 void GameObject::set_anim_vel(int v){
     current_sprite.set_timer_limit(v);
+}
+
+void GameObject::set_size(int w, int h){
+    current_sprite.set_size(w, h);
 }
 
 //sprite

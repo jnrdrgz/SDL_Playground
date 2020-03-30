@@ -25,10 +25,12 @@ public:
     int anim_vel = 1000;
     
     GameObject(){}
-    GameObject(SDL_Renderer* renderer, 
+    GameObject( SDL_Renderer* renderer, 
                 GraphicsComponent* graphicscomponent, 
                 InputComponent* inputcomponent,
                 UpdateComponent* updatecomponent);
+
+    void destroy();
 
     void draw(SDL_Renderer* renderer, int dt);
     void handle_input(SDL_Event event);
@@ -47,10 +49,10 @@ public:
 
     //set
     void set_current_sprite(Sprite sprite);
-    
     void set_position(int x, int y);
-
     void set_anim_vel(int v);
+    void set_size(int w, int h);
+
     
     //sprite
     void add_sprite(std::string name, Sprite sprite);

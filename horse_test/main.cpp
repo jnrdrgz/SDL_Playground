@@ -29,8 +29,6 @@ public:
         SDL_FreeSurface(tmp_srf);
     }
 
-
-
     void scroll(int v){
         if(src.x < 640*3){
             if(laps != 10){
@@ -58,8 +56,6 @@ public:
         SDL_RenderCopy(renderer, image, &src, &dst);
     }
 
-
-
 };
 
 
@@ -78,15 +74,23 @@ int main(int argc, char* args[])
     //game objects
     //Horse horse(game.renderer);
 
+    bool race_started = false;
+
     GameObject ECSHorse(game.renderer, 
         new HorseGraphicsComponent(), 
         new HorseInputComponent(),
         new HorseUpdateComponent());
 
+    ECSHorse.set_size(140,140);
+    ECSHorse.set_position(15, 195);
+
     GameObject ECSAIHorse(game.renderer, 
         new HorseGraphicsComponent(), 
         nullptr,
         new HorseAIComponent());
+
+    ECSAIHorse.set_size(140,140);
+    ECSAIHorse.set_position(0, 180);  
 
     //controllers
     BendingBarController bender_controller(350, 20, 100, 20);
@@ -106,19 +110,26 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_QUIT){
                 game.running = false;
             }
-            //horse.handle_input(game.event);
+            if(game.event.type == SDL_KEYDOWN){
+                if(game.event.key.keysym.sym == SDLK_SPACE){
+                    race_started = true;
+                }
+            }
+
             bender_controller.handle_input(game.event);
             ECSHorse.handle_input(game.event);
         }
 
-        ECSHorse.update_r(dt);
-        ECSAIHorse.update_r(dt);
-        
+        if(race_started){
+            ECSHorse.update_r(dt);
+            ECSAIHorse.update_r(dt);
+        }
+
         background.draw(game.renderer);
         
         //horse.update(game.renderer, dt);
         bender_controller.update();
-        //background.reference_scroll(horse);
+        background.reference_scroll(ECSHorse);
 
         bender_controller.draw(game.renderer);
 
@@ -137,5 +148,7 @@ int main(int argc, char* args[])
         
     }
     
+    ECSHorse.destroy();
+    ECSAIHorse.destroy();
     game.close();
 }

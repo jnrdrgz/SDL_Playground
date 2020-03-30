@@ -81,6 +81,11 @@ public:
 
     }
 
+    void destroy(){
+        SDL_DestroyTexture(texture);
+        texture = nullptr;
+    }
+
     bool operator==(const Sprite& sprite) const {
         return sprite.get_total_frames()==totalTextureFrames && 
                sprite.get_file_name()==file_name && 
