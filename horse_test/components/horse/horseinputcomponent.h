@@ -9,7 +9,7 @@ class HorseInputComponent : public InputComponent
 {
 public:
     HorseInputComponent(){}
-    void handle_input(GameObject& g, SDL_Event event);
+    void handle_input(GameObject& g, SDL_Event event) override;
 };
 
 #endif

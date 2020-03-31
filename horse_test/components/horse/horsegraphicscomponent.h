@@ -9,8 +9,8 @@ class HorseGraphicsComponent : public GraphicsComponent
 {
 public:
     HorseGraphicsComponent(){}
-    void load(GameObject& g, SDL_Renderer *renderer);
-    void draw(GameObject& g, SDL_Renderer *renderer, Uint32 dt);
+    void load(GameObject& g, SDL_Renderer *renderer) override;
+    void draw(GameObject& g, SDL_Renderer *renderer, Uint32 dt) override;
 };
 
 #endif

@@ -9,7 +9,7 @@ class HorseUpdateComponent : public UpdateComponent
 {
 public:
 	HorseUpdateComponent(){}
-    void update(GameObject& g, Uint32 dt);
+    void update(GameObject& g, Uint32 dt) override;
 };
 
 #endif

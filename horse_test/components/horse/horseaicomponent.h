@@ -18,7 +18,7 @@ public:
     int position = 0;
     
     HorseAIComponent(int meters_to_finnish, int laps_to_finnish, int max_vel);
-    void update(GameObject& g, Uint32 dt);
+    void update(GameObject& g, Uint32 dt) override;
 };
 
 #endif
