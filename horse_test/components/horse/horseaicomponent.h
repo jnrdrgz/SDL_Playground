@@ -4,6 +4,7 @@
 #include "../base/updatecomponent.h"
 #include "../../gameobject.h"
 #include <stdio.h>
+#include "horsedata.h"
 
 class HorseAIComponent : public UpdateComponent
 {
@@ -12,12 +13,16 @@ private:
 	int max_vel = 0;
 	bool runned = false;
 
-public:
+/*	
 	int meters_to_finnish = 0;
 	int laps_to_finnish = 0;
     int position = 0;
-    
-    HorseAIComponent(int meters_to_finnish, int laps_to_finnish, int max_vel);
+    int meters_to_travelled = 0;
+*/
+public:
+	HorseData* data = nullptr;
+
+    HorseAIComponent(HorseData* data);
     void update(GameObject& g, Uint32 dt) override;
 };
 

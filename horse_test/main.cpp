@@ -9,6 +9,7 @@
 #include "components/horse/horseinputcomponent.h"
 #include "components/horse/horseupdatecomponent.h"
 #include "components/horse/horseaicomponent.h"
+#include "components/horse/horsedata.h"
 
 static LogSystem log_system = LogSystem();
 
@@ -76,27 +77,32 @@ int main(int argc, char* args[])
 
     bool race_started = false;
 
+    HorseData* ECSHorse_data = new HorseData(640*11, 11, 10);
+    HorseData* ECSAIHorse_data = new HorseData(640*11, 11, 10);
+
     GameObject ECSHorse(game.renderer, 
-        new HorseGraphicsComponent(), 
+        new HorseGraphicsComponent(ECSHorse_data), 
         new HorseInputComponent(),
-        new HorseUpdateComponent());
+        new HorseUpdateComponent(ECSHorse_data));
 
     ECSHorse.set_size(140,140);
     ECSHorse.set_position(0, 195);
     ECSHorse.set_color_mod(255,0,0);
 
     GameObject ECSAIHorse(game.renderer, 
-        new HorseGraphicsComponent(), 
+        new HorseGraphicsComponent(ECSHorse_data), 
         nullptr,
-        new HorseAIComponent(640*11, 11, 10));
+        new HorseAIComponent(ECSAIHorse_data));
 
     ECSAIHorse.set_size(140,140);
-    ECSAIHorse.set_position(15, 180);  
+    ECSAIHorse.set_position(15, 180);
 
     //controllers
     BendingBarController bender_controller(350, 20, 100, 20);
 
     log_system.add_text("Laps", std::to_string(background.laps), game.renderer);
+    log_system.add_text("ECSHorse", std::to_string(ECSHorse_data->laps_to_finnish), game.renderer);
+    log_system.add_text("ECSAIHorse", std::to_string(ECSAIHorse_data->laps_to_finnish), game.renderer);
     //log_system.add_text("Horse_VEL", std::to_string(horse.get_vel_x()), game.renderer);
     //log_system.add_text("Horse_ANIMVEL", std::to_string(horse.get_anim_vel()), game.renderer);
 
@@ -134,10 +140,14 @@ int main(int argc, char* args[])
 
         bender_controller.draw(game.renderer);
 
-        ECSAIHorse.draw(game.renderer, dt);
+        if(ECSHorse_data->laps_to_finnish == ECSAIHorse_data->laps_to_finnish){
+            ECSAIHorse.draw(game.renderer, dt);
+        }
         ECSHorse.draw(game.renderer, dt);
         
         log_system.update_text("Laps", std::to_string(background.laps), game.renderer);
+        log_system.update_text("ECSHorse", std::to_string(ECSHorse_data->laps_to_finnish), game.renderer);
+        log_system.update_text("ECSAIHorse", std::to_string(ECSAIHorse_data->laps_to_finnish), game.renderer);
         //log_system.update_text("Horse_VEL", std::to_string(horse.get_vel_x()), game.renderer);
         //log_system.update_text("Horse_ANIMVEL", std::to_string(horse.get_anim_vel()), game.renderer);
 

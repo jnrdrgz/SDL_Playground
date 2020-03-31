@@ -6,6 +6,7 @@
 class UpdateComponent
 {
 public:
+	bool active;
     virtual void update(GameObject& g, Uint32 dt) = 0;
 };
 

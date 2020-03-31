@@ -1,1 +1,1 @@
-g++ -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer *.cpp *.h components/base/*.h components/horse/*.cpp components/horse/*.h -o game && ./game
+g++ -Wall -Wextra -g -O3 -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer *.cpp *.h components/base/*.h components/horse/*.cpp components/horse/*.h -o game && ./game
