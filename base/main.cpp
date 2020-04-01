@@ -23,7 +23,9 @@ int main(int argc, char* args[])
                 
             }
             if(game.event.type == SDL_KEYDOWN){
+                if(game.event.key.keysym.sym == SDLK_RIGHT){
                 
+                }
             }
         }
 
