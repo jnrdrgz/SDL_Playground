@@ -16,7 +16,7 @@ void HorseAIComponent::update(GameObject& g, Uint32 dt){
     
     data->meters_to_finnish -= g.x_velocity;
     data->meters_to_travelled += g.x_velocity;
-    data->laps_to_finnish = data->meters_to_finnish/640;
+    data->laps_to_finnish = data->meters_to_finnish/(640*2);
     data->position = data->meters_to_travelled%640;
 
 

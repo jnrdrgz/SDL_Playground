@@ -17,7 +17,7 @@ void HorseInputComponent::handle_input(GameObject &g, SDL_Event event){
         }
         if (event.key.keysym.sym == SDLK_UP){
             
-            printf("pressing up in horse ecs input component\n");
+            //printf("pressing up in horse ecs input component\n");
             g.run();
             
             g.sum_velocity(1,0);
