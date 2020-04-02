@@ -9,6 +9,7 @@ public:
     int position = 0;
     int meters_to_travelled = 0;
     int max_vel = 0;
+    int map_x = 0;
 
     HorseData(){}
     HorseData(int meters_to_finnish, int laps_to_finnish, int max_vel){

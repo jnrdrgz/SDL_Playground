@@ -80,6 +80,9 @@ int main(int argc, char* args[])
     HorseData* ECSHorse_data = new HorseData(640*11, 11, 10);
     HorseData* ECSAIHorse_data = new HorseData(640*11, 11, 10);
 
+    ECSHorse_data->map_x = background.src.x;
+    ECSAIHorse_data->map_x = background.src.x;
+
     GameObject ECSHorse(game.renderer, 
         new HorseGraphicsComponent(ECSHorse_data), 
         new HorseInputComponent(),
@@ -137,6 +140,9 @@ int main(int argc, char* args[])
         //horse.update(game.renderer, dt);
         bender_controller.update();
         background.reference_scroll(ECSHorse);
+        ECSHorse_data->map_x = background.src.x;
+        ECSAIHorse_data->map_x = background.src.x;
+
 
         bender_controller.draw(game.renderer);
 
