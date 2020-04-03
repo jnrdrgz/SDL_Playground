@@ -3,28 +3,32 @@
 #include "../SDL_Needs/game.h"
 #include "../timer.h"
 
+#include <random>
+#include <vector>
+
 static LogSystem log_system = LogSystem();
 
 class Camera
 {
 public:
     static int x,y,zoom;
+    int camera_vel = 14;
     Camera(){
     }
 
     void handle_input(SDL_Event event){
         if(event.type == SDL_KEYDOWN){
             if(event.key.keysym.sym == SDLK_RIGHT){
-                x += 10;
+                x += camera_vel;
             }
             if(event.key.keysym.sym == SDLK_DOWN){
-                y += 10;
+                y += camera_vel;
             }
             if(event.key.keysym.sym == SDLK_LEFT){
-                x -= 10;
+                x -= camera_vel;
             }
             if(event.key.keysym.sym == SDLK_UP){
-                y -= 10;
+                y -= camera_vel;
             }
         }
     }
@@ -36,6 +40,46 @@ static Camera camera = Camera();
 int Camera::x=0;
 int Camera::y=0;
 int Camera::zoom=1;
+
+SDL_Rect apply_camera_back_dst(SDL_Rect dst){
+    SDL_Rect dst_2 = dst;
+           
+    if(Camera::x <= 0){
+        dst_2.x -= Camera::x;
+    } else if(Camera::x >= 480*4){
+        dst_2.x -= Camera::x-(480*4);  
+    } 
+    if(Camera::y <= 0){
+        dst_2.y -= Camera::y;
+    } 
+
+    return dst_2;
+}
+
+SDL_Rect apply_camera_back_src(SDL_Rect src){
+    SDL_Rect src_2 = src;
+           
+    if(Camera::x >= 480*4){
+        src_2.x += 480*4;
+    } else {
+        src_2.x += Camera::x;
+    }
+
+    if(!(Camera::y <= 0)){
+        src_2.y += Camera::y;
+    } 
+
+    return src_2;
+}
+
+
+SDL_Rect update_camera_object(SDL_Rect rct){
+    SDL_Rect rct_2 = rct;
+    rct_2.x = rct.x-Camera::x;
+    rct_2.y = rct.y-Camera::y;
+    return rct_2;
+}
+
 
 class Background
 {
@@ -53,18 +97,20 @@ public:
         SDL_FreeSurface(tmp_srf);
     }
 
+    SDL_Rect dst_2 = dst;
+    SDL_Rect src_2 = src;
+           
     void update(){
         //dst.x = Camera::x;
         //dst.y = Camera::y;
 
+        dst_2 = apply_camera_back_dst(dst);
+        src_2 = apply_camera_back_src(src);
 
     }
 
     void draw(SDL_Renderer* renderer){
-        SDL_Rect dst_2 = dst;
-        SDL_Rect src_2 = src;
-           
-        if(Camera::x <= 0){
+        /*if(Camera::x <= 0){
             dst_2.x -= Camera::x;
         } else if(Camera::x >= 480*4){
             dst_2.x -= Camera::x-(480*4);
@@ -73,12 +119,11 @@ public:
             src_2.x += Camera::x;
         }
 
-
         if(Camera::y <= 0){
             dst_2.y -= Camera::y;
         } else {
             src_2.y += Camera::y;
-        }
+        }*/
 
         SDL_RenderCopy(renderer, image, &src_2, &dst_2);
     }
@@ -109,15 +154,56 @@ class GameObject
 {
 public:
     SDL_Rect rct = {100,100,40,40};
+    SDL_Rect rct_2 = rct;
     bool started = false;
+
+    Uint8 r = 0;
+    Uint8 g = 0;
+    Uint8 b = 0;
+
+    float v = 0;
+    float s = 0.3;
 
 
     GameObject(){}
+    GameObject(float s){
+        this->s = s;
+    }
+
+    GameObject(int x, int y, float s){
+        this->s = s;
+        rct.x = x;
+        rct.y = y;
+
+        rct_2 = rct;
+    }
+
+
+    GameObject(int x, int y, Uint8 r, Uint8 g, Uint8 b, float s){
+        this->s = s;
+        
+        rct.x = x;
+        rct.y = y;
+
+        rct_2 = rct;
+
+        this->r = r;
+        this->g = g;
+        this->b = b;
+    }
+
+    void set_position(int x, int y){
+        rct.x = x;
+        rct.y = y;
+
+        rct_2 = rct;
+    }
 
     void handle_input(SDL_Event event){
         if(event.type == SDL_KEYDOWN){
             if(event.key.keysym.sym == SDLK_SPACE){
                 started = !started;
+                printf("inptu gandled\n");
             }
         }
     }
@@ -126,19 +212,19 @@ public:
         if(started){
             if(rct.x>480*3){
                 rct.x=480;
+                v = 0;
             }
-            //} else {
-            
-            //}
-            rct.x += 4;    
+            v += s;
+            rct.x += (int)v;    
         }
+
+        rct_2 = update_camera_object(rct);
     }
 
     void draw(SDL_Renderer* renderer){
-        SDL_Rect rct_2 = rct;
-        rct_2.x = rct.x-Camera::x;
-        rct_2.y = rct.y-Camera::y;
-        SDL_SetRenderDrawColor( renderer, 0, 0, 0, 255);
+        //rct_2.x = rct.x-Camera::x;
+        //rct_2.y = rct.y-Camera::y;
+        SDL_SetRenderDrawColor( renderer, r, g, b, 255);
         SDL_RenderFillRect(renderer, &rct_2);
     }
 
@@ -153,7 +239,25 @@ int main(int argc, char* args[])
 
     Background background(game.renderer);
 
-    GameObject cuad;
+    srand(SDL_GetTicks());
+
+    int base_x = 0;
+    int base_y = 480 - 40;
+    GameObject cuad(base_x, base_y, 0, 0, 0, 0.2f);
+
+    base_x += 15;
+    base_y -= 50;
+
+    std::vector<GameObject> gos;    
+    for(int i = 0; i<4; i++){
+        float s = ((float)(rand()%5))/10.0f;
+        s += 0.05f;
+        printf("created %d s: %.2f\n", i,s);
+        gos.push_back(GameObject(base_x, base_y, rand()%255,rand()%255,rand()%255, s));
+        
+        base_x += 15;
+        base_y -= 50;
+    }
 
     log_system.add_text("CAMERA_X", std::to_string(Camera::x), game.renderer);
     log_system.add_text("CAMERA_Y", std::to_string(Camera::y), game.renderer);
@@ -167,9 +271,11 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_QUIT){
                 game.running = false;
             }
+            
             if(game.event.type == SDL_MOUSEMOTION){
                 
             }
+            
             if(game.event.type == SDL_KEYDOWN){
                 if(game.event.key.keysym.sym == SDLK_ESCAPE){
                     game.running = false;
@@ -178,6 +284,11 @@ int main(int argc, char* args[])
             //background.handle_input(game.event);
             camera.handle_input(game.event);
             cuad.handle_input(game.event);
+
+            for(auto &go : gos){
+                go.handle_input(game.event);
+            }
+
         }
 
         log_system.update_text("CAMERA_X", std::to_string(Camera::x), game.renderer);
@@ -185,20 +296,30 @@ int main(int argc, char* args[])
         log_system.update_text("GO_X", std::to_string(cuad.rct.x), game.renderer);
 
         cuad.update();
+        background.update();
+        for(auto &go : gos){
+            go.update();
+        }
 
         background.draw(game.renderer);
-
         cuad.draw(game.renderer);
+        
+        for(auto &go : gos){
+            go.draw(game.renderer);
+        }
 
         log_system.draw(game.renderer);
-
     
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
 
        
     }
-    
+
+    //for(auto go : gos){
+    //    delete go;
+    //}
+    //
     
     game.close();
 }
