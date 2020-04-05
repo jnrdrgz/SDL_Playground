@@ -9,6 +9,8 @@
 
 static LogSystem log_system = LogSystem();
 
+class GameObject;
+
 struct TimerClass
 {
     int timestamp;
@@ -84,6 +86,8 @@ public:
             }
         }
     }
+
+    void follow(int when_obj_get_here, GameObject g);
 
     //SDL_Rect convert_to_camera(SDL_Rect src, SDL_Rect dst){}
 };
@@ -169,7 +173,7 @@ public:
     SDL_Rect dst = {0,0,640,480};
 
     Background(SDL_Renderer* renderer){
-        SDL_Surface* tmp_srf = IMG_Load("bt2.png");
+        SDL_Surface* tmp_srf = IMG_Load("bt2_2.png");
         image = SDL_CreateTextureFromSurface(renderer, tmp_srf);
         SDL_FreeSurface(tmp_srf);
     }
@@ -238,8 +242,9 @@ public:
     Uint8 g = 0;
     Uint8 b = 0;
 
-    float v = 0;
-    float s = 0.3;
+    float v = 0.0f;
+    float s = 0.3f;
+    float max_v = 10.0f;
 
 
     GameObject(){}
@@ -280,18 +285,20 @@ public:
         if(event.type == SDL_KEYDOWN){
             if(event.key.keysym.sym == SDLK_SPACE){
                 started = !started;
-                printf("inptu handled\n");
+                printf("input handled\n");
             }
         }
     }
 
     void update(){
         if(started){
-            if(rct.x>480*3){
-                rct.x=480;
-                v = 0;
+            if(rct.x>640*3){
+                rct.x=640;
+                //v = 0;
             }
-            v += s;
+            if(v < max_v){
+                v += s;
+            }
             rct.x += (int)v;    
         }
 
@@ -306,6 +313,19 @@ public:
     }
 
 };
+
+void Camera::follow(int when_obj_get_here, GameObject g){
+    /*if(g.rct.x<640){
+        if(x < g.rct_2.x-(640/2)){
+            x += (int)g.v + 10;
+        } 
+    } else {
+        x = g.rct_2.x-(640/2);
+    }*/
+
+    x = g.rct_2.x;
+
+}
 
 
 int main(int argc, char* args[])
@@ -342,6 +362,8 @@ int main(int argc, char* args[])
     log_system.add_text("CAMERA_Y", std::to_string(Camera::y), game.renderer);
     log_system.add_text("GO_X", std::to_string(cuad.rct.x), game.renderer);
 
+    bool following = true;
+
     while(game.running){
         
         SDL_RenderClear(game.renderer);
@@ -358,6 +380,10 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_KEYDOWN){
                 if(game.event.key.keysym.sym == SDLK_ESCAPE){
                     game.running = false;
+                }
+                if(game.event.key.keysym.sym == SDLK_f){
+                    printf("f\n");
+                    following = !following;
                 }
             }
             //background.handle_input(game.event);
@@ -386,6 +412,8 @@ int main(int argc, char* args[])
         for(auto &go : gos){
             go.draw(game.renderer);
         }
+
+        if(following) camera.follow(640/2, cuad);
 
         log_system.draw(game.renderer);
     
