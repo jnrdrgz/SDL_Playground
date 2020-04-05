@@ -5,13 +5,37 @@
 
 #include <random>
 #include <vector>
+#include <ctime>
 
 static LogSystem log_system = LogSystem();
 
+struct TimerClass
+{
+    int timestamp;
+    TimerClass(){
+        timestamp = (int)time(0);
+    }
+
+    ~TimerClass(){
+        int duration = (int)time(0) - timestamp;
+        printf("the timer longed: %d\n", duration);
+    }
+
+    TimerClass(const TimerClass& other_timer_class)
+        : timestamp(other_timer_class.timestamp)
+    {
+
+    }
+
+};
+
 class Camera
 {
+private:
+    bool pressed = false;
 public:
-    static int x,y,zoom;
+    static int x,y;
+    static float zoom;
     int camera_vel = 14;
     Camera(){
     }
@@ -30,6 +54,34 @@ public:
             if(event.key.keysym.sym == SDLK_UP){
                 y -= camera_vel;
             }
+            if(event.key.keysym.sym == SDLK_PLUS){
+                if(!pressed){
+                    zoom += 0.5f;
+                    pressed = true;
+                    printf("zoom: %.2f\n", zoom);
+                }
+            }
+            if(event.key.keysym.sym == SDLK_MINUS){
+                if(!pressed){
+                    zoom -= 0.5f;
+                    pressed = true;
+                    printf("zoom: %.2f\n", zoom);
+                }
+            }
+        }
+
+        if(event.type == SDL_KEYUP){
+            if(event.key.keysym.sym == SDLK_PLUS){
+                if(pressed){
+                    pressed = false;
+                }
+            }
+
+            if(event.key.keysym.sym == SDLK_MINUS){
+                if(pressed){
+                    pressed = false;
+                }
+            }
         }
     }
 
@@ -39,7 +91,7 @@ public:
 static Camera camera = Camera();
 int Camera::x=0;
 int Camera::y=0;
-int Camera::zoom=1;
+float Camera::zoom=1.0f;
 
 SDL_Rect apply_camera_back_dst(SDL_Rect dst){
     SDL_Rect dst_2 = dst;
@@ -51,7 +103,12 @@ SDL_Rect apply_camera_back_dst(SDL_Rect dst){
     } 
     if(Camera::y <= 0){
         dst_2.y -= Camera::y;
-    } 
+    } else if(Camera::y >= 480*0){
+        dst_2.y -= Camera::y-(480*0);  
+    }
+
+    //dst_2.w = (int)((float)dst_2.w * Camera::zoom);
+    //dst_2.h = (int)((float)dst_2.h * Camera::zoom);
 
     return dst_2;
 }
@@ -61,22 +118,42 @@ SDL_Rect apply_camera_back_src(SDL_Rect src){
            
     if(Camera::x >= 480*4){
         src_2.x += 480*4;
-    } else {
+    } else if (Camera::x > 0){
         src_2.x += Camera::x;
     }
 
-    if(!(Camera::y <= 0)){
+//    if(!(Camera::y <= 0)){
+//        src_2.y += Camera::y;
+//    } 
+
+    if(Camera::y >= 480*0){
+        src_2.y += 480*0;
+    } else if (Camera::y > 0){
         src_2.y += Camera::y;
-    } 
+    }
+
+
+    //float val = (1.0f/Camera::zoom);
+
+    //src_2.w = (int)((float)src_2.w * val);
+    //src_2.h = (int)((float)src_2.h * val);
+
+
+    //src_2.x = (int)((float)src_2.x * val);
 
     return src_2;
 }
 
 
-SDL_Rect update_camera_object(SDL_Rect rct){
+SDL_Rect apply_camera_object(SDL_Rect rct){
     SDL_Rect rct_2 = rct;
     rct_2.x = rct.x-Camera::x;
     rct_2.y = rct.y-Camera::y;
+      
+    //rct_2.w = (int)((float)rct_2.w * Camera::zoom);
+    //rct_2.h = (int)((float)rct_2.h * Camera::zoom);
+      
+
     return rct_2;
 }
 
@@ -203,7 +280,7 @@ public:
         if(event.type == SDL_KEYDOWN){
             if(event.key.keysym.sym == SDLK_SPACE){
                 started = !started;
-                printf("inptu gandled\n");
+                printf("inptu handled\n");
             }
         }
     }
@@ -218,7 +295,7 @@ public:
             rct.x += (int)v;    
         }
 
-        rct_2 = update_camera_object(rct);
+        rct_2 = apply_camera_object(rct);
     }
 
     void draw(SDL_Renderer* renderer){
@@ -234,6 +311,8 @@ public:
 int main(int argc, char* args[])
 {
     Game game;
+    TimerClass timer_1;
+    
     game.init("test", 640, 480);
     log_system.init();
 
