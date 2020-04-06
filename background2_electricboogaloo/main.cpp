@@ -293,12 +293,14 @@ public:
     }
 
     void update(){
+        screenw_ip = 640 + 320; //screen w + initial object pos
         if(started){
             if(laps < 10){
                 if(rct.x>(640*3)-(640/2)){
                     rct.x=640+(640/2);
                     //v = 0;
                     s = ((float)(rand()%5))/10.0f;
+                    s += 0.1f;
                     v = 1.0f;
                     laps++;
                 }
@@ -354,7 +356,12 @@ int main(int argc, char* args[])
 
     srand(SDL_GetTicks());
 
-    int base_x = 0;
+    bool following =  true;
+
+    //Camera::x = 640/2;
+    following = false;
+
+    int base_x = 320;
     int base_y = 480 - 40;
     GameObject cuad(base_x, base_y, 255, 0, 0, 0.2f);
 
@@ -372,11 +379,11 @@ int main(int argc, char* args[])
         base_y -= 50;
     }
 
+
     log_system.add_text("CAMERA_X", std::to_string(Camera::x), game.renderer);
     log_system.add_text("CAMERA_Y", std::to_string(Camera::y), game.renderer);
     log_system.add_text("GO_X", std::to_string(cuad.rct.x), game.renderer);
 
-    bool following =  true;
 
     while(game.running){
         
@@ -398,6 +405,9 @@ int main(int argc, char* args[])
                 if(game.event.key.keysym.sym == SDLK_f){
                     printf("f\n");
                     following = !following;
+                }
+                if(game.event.key.keysym.sym == SDLK_SPACE){
+                    following = true;
                 }
             }
             //background.handle_input(game.event);
