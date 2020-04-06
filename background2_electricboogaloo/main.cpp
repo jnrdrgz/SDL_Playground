@@ -88,6 +88,7 @@ public:
     }
 
     void follow(int when_obj_get_here, GameObject g);
+    void update();
 
     //SDL_Rect convert_to_camera(SDL_Rect src, SDL_Rect dst){}
 };
@@ -246,6 +247,7 @@ public:
     float s = 0.3f;
     float max_v = 10.0f;
 
+    int laps = 0;
 
     GameObject(){}
     GameObject(float s){
@@ -292,9 +294,14 @@ public:
 
     void update(){
         if(started){
-            if(rct.x>640*3){
-                rct.x=640;
-                //v = 0;
+            if(laps < 10){
+                if(rct.x>(640*3)-(640/2)){
+                    rct.x=640+(640/2);
+                    //v = 0;
+                    s = ((float)(rand()%5))/10.0f;
+                    v = 1.0f;
+                    laps++;
+                }
             }
             if(v < max_v){
                 v += s;
@@ -323,8 +330,15 @@ void Camera::follow(int when_obj_get_here, GameObject g){
         x = g.rct_2.x-(640/2);
     }*/
 
-    x = g.rct_2.x;
+    x = ((g.rct.x - (640*g.rct.x%4)))-(640/2);
 
+}
+
+void Camera::update(){
+    x+=(640/25);
+    if(x > 640*2){
+        x = 640;
+    }
 }
 
 
@@ -342,7 +356,7 @@ int main(int argc, char* args[])
 
     int base_x = 0;
     int base_y = 480 - 40;
-    GameObject cuad(base_x, base_y, 0, 0, 0, 0.2f);
+    GameObject cuad(base_x, base_y, 255, 0, 0, 0.2f);
 
     base_x += 15;
     base_y -= 50;
@@ -362,7 +376,7 @@ int main(int argc, char* args[])
     log_system.add_text("CAMERA_Y", std::to_string(Camera::y), game.renderer);
     log_system.add_text("GO_X", std::to_string(cuad.rct.x), game.renderer);
 
-    bool following = true;
+    bool following =  true;
 
     while(game.running){
         
@@ -406,14 +420,16 @@ int main(int argc, char* args[])
             go.update();
         }
 
+        if(following) camera.follow(640/2, cuad);
+
         background.draw(game.renderer);
         cuad.draw(game.renderer);
         
         for(auto &go : gos){
-            go.draw(game.renderer);
+            if(go.laps == cuad.laps) go.draw(game.renderer);
         }
 
-        if(following) camera.follow(640/2, cuad);
+        //if(following) camera.update();
 
         log_system.draw(game.renderer);
     
