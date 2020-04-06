@@ -101,10 +101,12 @@ float Camera::zoom=1.0f;
 SDL_Rect apply_camera_back_dst(SDL_Rect dst){
     SDL_Rect dst_2 = dst;
            
+    int initial_pos = 320; // this should came from somewhere 
+    int back_img_length_x = (480*4) + initial_pos;
     if(Camera::x <= 0){
         dst_2.x -= Camera::x;
-    } else if(Camera::x >= 480*4){
-        dst_2.x -= Camera::x-(480*4);  
+    } else if(Camera::x >= back_img_length_x){
+        dst_2.x -= Camera::x-back_img_length_x;  
     } 
     if(Camera::y <= 0){
         dst_2.y -= Camera::y;
@@ -120,9 +122,12 @@ SDL_Rect apply_camera_back_dst(SDL_Rect dst){
 
 SDL_Rect apply_camera_back_src(SDL_Rect src){
     SDL_Rect src_2 = src;
+
+    int initial_pos = 320; // this should came from somewhere 
+    int back_img_length_x = (480*4) + initial_pos;
            
-    if(Camera::x >= 480*4){
-        src_2.x += 480*4;
+    if(Camera::x >=  back_img_length_x){
+        src_2.x +=  back_img_length_x;
     } else if (Camera::x > 0){
         src_2.x += Camera::x;
     }
@@ -293,22 +298,27 @@ public:
     }
 
     void update(){
-        screenw_ip = 640 + 320; //screen w + initial object pos
+        //screenw_ip = 640 + 320; //screen w + initial object pos
         if(started){
-            if(laps < 10){
-                if(rct.x>(640*3)-(640/2)){
-                    rct.x=640+(640/2);
+            if(laps < 5){
+                if(rct.x>( (640*3)-(640/2) ) + 320 ){
+                    rct.x=640+(640/2)  + 320;
                     //v = 0;
                     s = ((float)(rand()%5))/10.0f;
                     s += 0.1f;
                     v = 1.0f;
                     laps++;
                 }
-            }
+            } 
             if(v < max_v){
                 v += s;
             }
             rct.x += (int)v;    
+        }
+
+        if(rct.x > 640*4){
+            v = 0;
+            s = 0;
         }
 
         rct_2 = apply_camera_object(rct);
