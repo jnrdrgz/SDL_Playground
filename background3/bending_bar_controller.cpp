@@ -39,6 +39,7 @@ void BendingBarController::update(){
         bend_vel = -2;
     } else if(bender.x < bar.x){
         bend_vel = 2;
+        
     }
 
     bender.x += bend_vel;
@@ -63,4 +64,20 @@ void BendingBarController::handle_input(SDL_Event event){
             printf("%.2f\n", t_get_value<float>(50.0, (float)bender_x_within_bar(), 3));
         }
     }  
+}
+
+
+void BendingBarController::start(){
+    bend_vel = 2;
+}
+void BendingBarController::start(int v){
+    bend_vel = v;
+}
+
+void BendingBarController::speed_up(int n){
+    bend_vel += n;
+}
+
+void BendingBarController::slow_down(int n){
+    bend_vel -= n;
 }

@@ -471,6 +471,7 @@ int main(int argc, char* args[])
 
     //controllers
     BendingBarController bender_controller(350, 20, 100, 20);
+    bender_controller.start();
 
 
     log_system.add_text("CAMERA_X", std::to_string(Camera::x), game.renderer);
@@ -523,6 +524,19 @@ int main(int argc, char* args[])
                 if(game.event.key.keysym.sym == SDLK_h){
                     //cuad.v = 0.0f;
                 }
+
+                if(game.event.key.keysym.sym == SDLK_b){
+                    printf("bender val: %.2f\n", bender_controller.get_controller_value());
+                    if(bender_controller.get_controller_value() < 1.0f){
+                        printf("HIT!\n");
+                        cuad.v += 1.0f;
+                        bender_controller.speed_up(1);
+                    } else {
+                        printf("MISS!\n");
+                        cuad.v -= 1.0f;
+                        bender_controller.slow_down(1);
+                    }
+                }
             }
             //background.handle_input(game.event);
             camera.handle_input(game.event);
@@ -541,6 +555,7 @@ int main(int argc, char* args[])
 
         cuad.update();
         background.update();
+        bender_controller.update();
 
         if(SDL_TICKS_PASSED(SDL_GetTicks(), timeout)){
             for(auto &go : gos){

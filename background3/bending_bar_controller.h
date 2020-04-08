@@ -53,6 +53,12 @@ public:
 
     float get_controller_value();
 
+    void start();
+    void start(int v);
+
+    void speed_up(int n);
+    void slow_down(int n);
+
 };
 
 #endif
