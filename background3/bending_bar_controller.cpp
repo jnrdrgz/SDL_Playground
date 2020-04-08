@@ -36,9 +36,9 @@ void BendingBarController::update(){
     }*/
 
     if(bender.x + bender.w > bar.x + bar.w){
-        bend_vel = -2;
+        bend_vel = -acc;
     } else if(bender.x < bar.x){
-        bend_vel = 2;
+        bend_vel = acc;
         
     }
 
@@ -53,7 +53,7 @@ void BendingBarController::handle_input(SDL_Event event){
     if(event.type == SDL_KEYDOWN){
         if(event.key.keysym.sym == SDLK_i){
             printf("change\n");
-            bend_vel = 2;
+            acc = 2;
         }
         if(event.key.keysym.sym == SDLK_UP){
             if(bend_vel == 0)
@@ -68,16 +68,17 @@ void BendingBarController::handle_input(SDL_Event event){
 
 
 void BendingBarController::start(){
-    bend_vel = 2;
+    acc = 2;
+    bend_vel = acc;
 }
 void BendingBarController::start(int v){
-    bend_vel = v;
+    acc = v;
 }
 
 void BendingBarController::speed_up(int n){
-    bend_vel += n;
+    acc += n;
 }
 
 void BendingBarController::slow_down(int n){
-    bend_vel -= n;
+    acc -= n;
 }

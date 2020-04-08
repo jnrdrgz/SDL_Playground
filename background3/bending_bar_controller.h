@@ -9,6 +9,7 @@ private:
     SDL_Rect bar;
     SDL_Rect bender;
     int bend_vel = 0;
+    int acc = 0;
 
     int distance(int target, int guess){
         if(target <= guess){
