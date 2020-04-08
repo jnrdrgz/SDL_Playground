@@ -2,6 +2,7 @@
 #include "../log_system/log_system.h"
 #include "../SDL_Needs/game.h"
 #include "../timer.h"
+#include "bending_bar_controller.h"
 
 #include <random>
 #include <vector>
@@ -33,7 +34,7 @@ struct TimerClass
         int duration = (int)time(0) - timestamp;
         
         if(name){
-            printf("the timer %s longed: %d\n", name, duration);
+            printf("the timer %s longed: %d seconds\n", name, duration);
             delete[] name;
         }
     }
@@ -287,9 +288,9 @@ public:
     Uint8 g = 0;
     Uint8 b = 0;
 
-    float v = 0.0f;
+    float v = 1.0f;
     float s = 0.3f;
-    float max_v = 10.0f;
+    float max_v = 20.0f;
 
     int laps = 0;
 
@@ -368,9 +369,8 @@ public:
                     laps++;
                 }
             }*/
-            if(v < max_v){
-                v += s;
-            }
+
+            
             rct.x += (int)v;    
         }
 
@@ -380,6 +380,17 @@ public:
         }
 
         rct_2 = apply_camera_object(rct);
+    }
+
+    void accelerate(){
+        if(v < max_v){
+            v += s;
+        }
+            
+    }
+
+    void reduce_v(){
+        
     }
 
     void draw(SDL_Renderer* renderer){
@@ -458,10 +469,19 @@ int main(int argc, char* args[])
         base_y -= 50;
     }
 
+    //controllers
+    BendingBarController bender_controller(350, 20, 100, 20);
+
 
     log_system.add_text("CAMERA_X", std::to_string(Camera::x), game.renderer);
     log_system.add_text("CAMERA_Y", std::to_string(Camera::y), game.renderer);
     log_system.add_text("GO_X", std::to_string(cuad.rct.x), game.renderer);
+
+    int target_seconds, lt;
+    
+    log_system.add_text("initial_seconds", std::to_string(lt), game.renderer);
+    
+    Uint32 timeout = SDL_GetTicks() + 500;
 
 
     while(game.running){
@@ -488,15 +508,20 @@ int main(int argc, char* args[])
                 if(game.event.key.keysym.sym == SDLK_SPACE){
                     following = true;
                 }
-                
+
                 if(game.event.key.keysym.sym == SDLK_PLUS){
-                    cuad.v += 0.3f;
+                    //cuad.v += 0.3f;
+                    //cuad.accelerate();
+                    cuad.v += 1.0f;
+                    
                 }
                 if(game.event.key.keysym.sym == SDLK_MINUS){
-                    cuad.v -= 0.3f;
+                    //cuad.v -= 0.3f;
+                    cuad.v -= 1.0f;
+                    
                 }
                 if(game.event.key.keysym.sym == SDLK_h){
-                    cuad.v = 0.0f;
+                    //cuad.v = 0.0f;
                 }
             }
             //background.handle_input(game.event);
@@ -512,9 +537,23 @@ int main(int argc, char* args[])
         log_system.update_text("CAMERA_X", std::to_string(Camera::x), game.renderer);
         log_system.update_text("CAMERA_Y", std::to_string(Camera::y), game.renderer);
         log_system.update_text("GO_X", std::to_string(cuad.rct.x), game.renderer);
+        log_system.update_text("initial_seconds", std::to_string(lt), game.renderer);
 
         cuad.update();
         background.update();
+
+        if(SDL_TICKS_PASSED(SDL_GetTicks(), timeout)){
+            for(auto &go : gos){
+                go.accelerate();
+            }
+
+            cuad.accelerate();
+
+            //printf("acc\n");
+
+            timeout = SDL_GetTicks() + 200;
+        }
+
         for(auto &go : gos){
             go.update();
         }
@@ -528,10 +567,14 @@ int main(int argc, char* args[])
             if(go.laps == cuad.laps) go.draw(game.renderer);
         }
 
+
         //if(following) camera.update();
 
+        bender_controller.draw(game.renderer);
         log_system.draw(game.renderer);
     
+        
+        
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
     }

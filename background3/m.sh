@@ -1,1 +1,1 @@
-g++ -Wall -Wextra -g -O3 -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer ../SDL_Needs/game.* ../log_system/*.cpp ../timer.h ../log_system/*.h main.cpp -o game && ./game
+g++ -Wall -Wextra -g -O3 -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer ../SDL_Needs/game.* ../log_system/*.cpp ../timer.h ../log_system/*.h *.h *.cpp -o game && ./game

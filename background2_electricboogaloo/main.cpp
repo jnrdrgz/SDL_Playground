@@ -254,6 +254,8 @@ public:
 
     int laps = 0;
 
+    bool TEMP_player = false;
+
     GameObject(){}
     GameObject(float s){
         this->s = s;
@@ -281,6 +283,21 @@ public:
         this->b = b;
     }
 
+    GameObject(int x, int y, Uint8 r, Uint8 g, Uint8 b, float s, bool TEMP_player){
+        this->s = s;
+        
+        rct.x = x;
+        rct.y = y;
+
+        rct_2 = rct;
+
+        this->r = r;
+        this->g = g;
+        this->b = b;
+
+        this->TEMP_player = TEMP_player;
+    }
+
     void set_position(int x, int y){
         rct.x = x;
         rct.y = y;
@@ -299,13 +316,17 @@ public:
 
     void update(){
         //screenw_ip = 640 + 320; //screen w + initial object pos
+
+        int b = 0;
+        //if(TEMP_player) b = 0;
         if(started){
             if(laps < 5){
-                if(rct.x>( (640*3)-(640/2) ) + 320 ){
-                    rct.x=640+(640/2)  + 320;
+                if(rct.x>( (640*3)-(640/2) ) + 320 + b){
+                    rct.x=640+(640/2)  + 320 -b;
                     //v = 0;
                     s = ((float)(rand()%5))/10.0f;
                     s += 0.1f;
+                    //if(TEMP_player) s -= 0.05f;
                     v = 1.0f;
                     laps++;
                 }
@@ -316,7 +337,7 @@ public:
             rct.x += (int)v;    
         }
 
-        if(rct.x > 640*4){
+        if(rct.x > (640*4) + 320){
             v = 0;
             s = 0;
         }
@@ -342,7 +363,18 @@ void Camera::follow(int when_obj_get_here, GameObject g){
         x = g.rct_2.x-(640/2);
     }*/
 
-    x = ((g.rct.x - (640*g.rct.x%4)))-(640/2);
+    //640 screenwidth
+    //g.rct.x position of the object in respect of the total map
+    //(it can be more than 604)
+    //mod 4 to get the position in the actual camera position 
+    //4 is the total number of panels of the background
+    
+    int screen_w = 640;
+    int middle_of_screen = screen_w/2;
+    int total_background_panels = 4;
+
+    int position_in_frame = screen_w * g.rct.x % total_background_panels; 
+    x = g.rct.x - position_in_frame - middle_of_screen;
 
 }
 
@@ -373,7 +405,7 @@ int main(int argc, char* args[])
 
     int base_x = 320;
     int base_y = 480 - 40;
-    GameObject cuad(base_x, base_y, 255, 0, 0, 0.2f);
+    GameObject cuad(base_x, base_y, 255, 0, 0, 0.2f, true);
 
     base_x += 15;
     base_y -= 50;
@@ -455,8 +487,6 @@ int main(int argc, char* args[])
     
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
-
-       
     }
 
     //for(auto go : gos){

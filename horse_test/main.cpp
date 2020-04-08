@@ -143,7 +143,6 @@ int main(int argc, char* args[])
         ECSHorse_data->map_x = background.src.x;
         ECSAIHorse_data->map_x = background.src.x;
 
-
         bender_controller.draw(game.renderer);
 
         if(ECSHorse_data->laps_to_finnish == ECSAIHorse_data->laps_to_finnish){
