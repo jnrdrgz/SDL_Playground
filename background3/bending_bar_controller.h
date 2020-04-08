@@ -7,6 +7,7 @@ class BendingBarController
 {
 private:
     SDL_Rect bar;
+    SDL_Rect goal_bar; // where you have tu hit
     SDL_Rect bender;
     int bend_vel = 0;
     int acc = 0;

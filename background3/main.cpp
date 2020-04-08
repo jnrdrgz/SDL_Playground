@@ -566,7 +566,7 @@ int main(int argc, char* args[])
 
             //printf("acc\n");
 
-            timeout = SDL_GetTicks() + 200;
+            timeout = SDL_GetTicks() + 200+(rand()%200);
         }
 
         for(auto &go : gos){

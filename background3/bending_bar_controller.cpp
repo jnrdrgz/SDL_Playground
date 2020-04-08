@@ -6,6 +6,12 @@ BendingBarController::BendingBarController(int x, int y, int w, int h){
     bar.w = w;
     bar.h = h;
 
+    goal_bar.w = w/2;
+    goal_bar.h = h;
+
+    goal_bar.x = x+(w/4);
+    goal_bar.y = y;
+
     bender.x = x;
     bender.y = y;
     bender.w = w/10;
@@ -21,7 +27,9 @@ void BendingBarController::draw(SDL_Renderer* renderer){
 
     SDL_SetRenderDrawColor( renderer, 255,0,0, 255);
     SDL_RenderFillRect(renderer, &bar);
-
+    
+    SDL_SetRenderDrawColor( renderer, 0,255,0, 255);
+    SDL_RenderFillRect(renderer, &goal_bar);
 
     SDL_SetRenderDrawColor( renderer, 0,0,0, 255);
     SDL_RenderFillRect(renderer, &bender);
