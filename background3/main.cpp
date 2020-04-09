@@ -348,6 +348,10 @@ public:
 
         rct_2 = rct;
     }
+    
+    void set_speed(float s){
+        this->s = s;
+    }
 
     void handle_input(SDL_Event event){
         if(event.type == SDL_KEYDOWN){
@@ -395,6 +399,11 @@ public:
 
     void reduce_v(){
         
+    }
+
+    void stop(){
+        v = 0;
+        s = 0;
     }
 
     void draw(SDL_Renderer* renderer){
@@ -448,7 +457,8 @@ public:
     int base_y = 480 - 40;
 
     GameObject player;
-    std::vector<GameObject> rivals;   
+    std::vector<GameObject> rivals;
+    std::vector<GameObject> tigers;   
 
     //controllers
     BendingBarController bender_controller;
@@ -471,6 +481,10 @@ public:
             s += 0.05f;
             printf("created %d s: %.2f\n", i,s);
             rivals.push_back(GameObject(base_x, base_y, 0xed,0xff,0xea, s));
+
+            s = ((float)(rand()%5))/10.0f;
+            s += 0.05f;
+            tigers.push_back(GameObject(base_x-50, base_y, 0,0,0, s));
             
             base_x += 15;
             base_y -= 50;
@@ -480,6 +494,38 @@ public:
         base_y = 480 - 40;
         
         bender_controller.start();
+    }
+
+    void reset(){
+        player.set_position(base_x, base_y);
+        player.set_speed(0.02f);
+
+        base_x += 15;
+        base_y -= 50;
+
+        for(int i = 0; i<4; i++){
+            float s = ((float)(rand()%5))/10.0f;
+            s += 0.05f;
+
+            rivals[i].stop();
+            rivals[i].set_position(base_x, base_y);
+            rivals[i].set_speed(s);
+            
+            
+            s = ((float)(rand()%5))/10.0f;
+            s += 0.05f;
+            tigers[i].stop();
+            tigers[i].set_position(base_x-50, base_y);
+            tigers[i].set_speed(s);
+            
+
+            base_x += 15;
+            base_y -= 50;
+        }
+
+        base_x = 320;
+        base_y = 480 - 40;
+        
     }
 
     void handle_input(SDL_Event event){
@@ -504,7 +550,14 @@ public:
                 
             }
             if(event.key.keysym.sym == SDLK_h){
-                //cuad.v = 0.0f;
+                //for(auto &rival : rivals){
+                //    rival.stop();
+                //}
+
+                for(int i = 0; i < rivals.size(); i++){
+                    rivals[i].v--;//.stop();
+                    //tigers[i].stop();
+                }
             }
 
             if(event.key.keysym.sym == SDLK_b){
@@ -522,8 +575,14 @@ public:
         }
 
         player.handle_input(event);    
-        for(auto &rival : rivals){
-            rival.handle_input(event);
+        //for(auto &rival : rivals){
+        //    rival.handle_input(event);
+        //}
+
+
+        for(int i = 0; i < rivals.size(); i++){
+            rivals[i].handle_input(event);
+            tigers[i].handle_input(event);
         }
 
     }
@@ -534,8 +593,9 @@ public:
         bender_controller.update();
 
         if(SDL_TICKS_PASSED(SDL_GetTicks(), timeout)){
-            for(auto &rival : rivals){
-                rival.accelerate();
+            for(int i = 0; i < rivals.size(); i++){
+                rivals[i].accelerate();
+                tigers[i].accelerate();
             }
 
             player.accelerate();
@@ -545,8 +605,18 @@ public:
             timeout = SDL_GetTicks() + 200+(rand()%200);
         }
 
-        for(auto &rival : rivals){
-            rival.update();
+        //for(auto &rival : rivals){
+        //    rival.update();
+        //}
+
+        for(int i = 0; i < rivals.size(); i++){
+            rivals[i].update();
+            tigers[i].update();
+
+            if(tigers[i].rct.x+tigers[i].rct.w > rivals[i].rct.x){
+                rivals[i].stop();
+                tigers[i].stop();
+            }
         }
 
         if(following) camera.follow(640/2, player);
@@ -556,9 +626,15 @@ public:
         background.draw(renderer);
         player.draw(renderer);
         
-        for(auto &rival : rivals){
-            rival.draw(renderer);
+        //for(auto &rival : rivals){
+        //    rival.draw(renderer);
+        //}
+
+        for(int i = 0; i < rivals.size(); i++){
+            rivals[i].draw(renderer);
+            tigers[i].draw(renderer);
         }
+
 
         bender_controller.draw(renderer);
     }
@@ -595,6 +671,9 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_KEYDOWN){
                if(game.event.key.keysym.sym == SDLK_ESCAPE){
                     game.running = false;
+                }
+                if(game.event.key.keysym.sym == SDLK_r){
+                    mainGame.reset();
                 }
             }
 
