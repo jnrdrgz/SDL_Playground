@@ -64,3 +64,12 @@ void BendingBarController::handle_input(SDL_Event event){
         }
     }  
 }
+
+
+void BendingBarController::start(){
+    bend_vel = 2;
+}
+
+void BendingBarController::start(int v){
+    bend_vel = v;
+}

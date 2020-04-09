@@ -218,6 +218,10 @@ public:
     SDL_Rect src = {0,0,640,480};//tmp_srf->w,tmp_srf->h};
     SDL_Rect dst = {0,0,640,480};
 
+    Background(){
+    }
+
+
     Background(SDL_Renderer* renderer){
         SDL_Surface* tmp_srf = IMG_Load("race_pit.png");
         image = SDL_CreateTextureFromSurface(renderer, tmp_srf);
@@ -433,6 +437,133 @@ void Camera::update(){
     }
 }
 
+class MainGame
+{
+public:
+    Background background;
+
+    bool following = false;
+
+    int base_x = 320;
+    int base_y = 480 - 40;
+
+    GameObject player;
+    std::vector<GameObject> rivals;   
+
+    //controllers
+    BendingBarController bender_controller;
+    Uint32 timeout = SDL_GetTicks() + 500;
+
+    MainGame(SDL_Renderer* renderer){
+        init(renderer);
+    }
+
+    void init(SDL_Renderer* renderer){
+        background = Background(renderer);
+        bender_controller = BendingBarController(350, 20, 100, 20);
+        player = GameObject(base_x, base_y, 255, 0, 0, 0.2f);
+
+        base_x += 15;
+        base_y -= 50;
+
+        for(int i = 0; i<4; i++){
+            float s = ((float)(rand()%5))/10.0f;
+            s += 0.05f;
+            printf("created %d s: %.2f\n", i,s);
+            rivals.push_back(GameObject(base_x, base_y, 0xed,0xff,0xea, s));
+            
+            base_x += 15;
+            base_y -= 50;
+        }
+
+        base_x = 320;
+        base_y = 480 - 40;
+        
+        bender_controller.start();
+    }
+
+    void handle_input(SDL_Event event){
+        if(event.type == SDL_KEYDOWN){
+            if(event.key.keysym.sym == SDLK_f){
+                printf("f\n");
+                following = !following;
+            }
+            if(event.key.keysym.sym == SDLK_SPACE){
+                following = true;
+            }
+
+            if(event.key.keysym.sym == SDLK_PLUS){
+                //cuad.v += 0.3f;
+                //cuad.accelerate();
+                player.v += 1.0f;
+                
+            }
+            if(event.key.keysym.sym == SDLK_MINUS){
+                //cuad.v -= 0.3f;
+                player.v -= 1.0f;
+                
+            }
+            if(event.key.keysym.sym == SDLK_h){
+                //cuad.v = 0.0f;
+            }
+
+            if(event.key.keysym.sym == SDLK_b){
+                printf("bender val: %.2f\n", bender_controller.get_controller_value());
+                if(bender_controller.get_controller_value() < 1.0f){
+                    printf("HIT!\n");
+                    player.v += 1.0f;
+                    bender_controller.speed_up(1);
+                } else {
+                    printf("MISS!\n");
+                    player.v -= 1.0f;
+                    bender_controller.slow_down(1);
+                }
+            }
+        }
+
+        player.handle_input(event);    
+        for(auto &rival : rivals){
+            rival.handle_input(event);
+        }
+
+    }
+
+    void update(){
+        player.update();
+        background.update();
+        bender_controller.update();
+
+        if(SDL_TICKS_PASSED(SDL_GetTicks(), timeout)){
+            for(auto &rival : rivals){
+                rival.accelerate();
+            }
+
+            player.accelerate();
+
+            //printf("acc\n");
+
+            timeout = SDL_GetTicks() + 200+(rand()%200);
+        }
+
+        for(auto &rival : rivals){
+            rival.update();
+        }
+
+        if(following) camera.follow(640/2, player);
+    }
+
+    void draw(SDL_Renderer* renderer){
+        background.draw(renderer);
+        player.draw(renderer);
+        
+        for(auto &rival : rivals){
+            rival.draw(renderer);
+        }
+
+        bender_controller.draw(renderer);
+    }
+
+};
 
 int main(int argc, char* args[])
 {
@@ -442,48 +573,12 @@ int main(int argc, char* args[])
     game.init("test", 640, 480);
     log_system.init();
 
-    Background background(game.renderer);
+    MainGame mainGame(game.renderer);
 
     srand(SDL_GetTicks());
-
-    bool following =  true;
-
-    //Camera::x = 640/2;
-    following = false;
-
-    int base_x = 320;
-    int base_y = 480 - 40;
-    GameObject cuad(base_x, base_y, 255, 0, 0, 0.2f);
-
-    base_x += 15;
-    base_y -= 50;
-
-    std::vector<GameObject> gos;    
-    for(int i = 0; i<4; i++){
-        float s = ((float)(rand()%5))/10.0f;
-        s += 0.05f;
-        printf("created %d s: %.2f\n", i,s);
-        gos.push_back(GameObject(base_x, base_y, 0xed,0xff,0xea, s));
-        
-        base_x += 15;
-        base_y -= 50;
-    }
-
-    //controllers
-    BendingBarController bender_controller(350, 20, 100, 20);
-    bender_controller.start();
-
-
+    
     log_system.add_text("CAMERA_X", std::to_string(Camera::x), game.renderer);
     log_system.add_text("CAMERA_Y", std::to_string(Camera::y), game.renderer);
-    log_system.add_text("GO_X", std::to_string(cuad.rct.x), game.renderer);
-
-    int target_seconds, lt;
-    
-    log_system.add_text("initial_seconds", std::to_string(lt), game.renderer);
-    
-    Uint32 timeout = SDL_GetTicks() + 500;
-
 
     while(game.running){
         
@@ -497,107 +592,27 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_MOUSEMOTION){
                 
             }
-            
             if(game.event.type == SDL_KEYDOWN){
-                if(game.event.key.keysym.sym == SDLK_ESCAPE){
+               if(game.event.key.keysym.sym == SDLK_ESCAPE){
                     game.running = false;
                 }
-                if(game.event.key.keysym.sym == SDLK_f){
-                    printf("f\n");
-                    following = !following;
-                }
-                if(game.event.key.keysym.sym == SDLK_SPACE){
-                    following = true;
-                }
-
-                if(game.event.key.keysym.sym == SDLK_PLUS){
-                    //cuad.v += 0.3f;
-                    //cuad.accelerate();
-                    cuad.v += 1.0f;
-                    
-                }
-                if(game.event.key.keysym.sym == SDLK_MINUS){
-                    //cuad.v -= 0.3f;
-                    cuad.v -= 1.0f;
-                    
-                }
-                if(game.event.key.keysym.sym == SDLK_h){
-                    //cuad.v = 0.0f;
-                }
-
-                if(game.event.key.keysym.sym == SDLK_b){
-                    printf("bender val: %.2f\n", bender_controller.get_controller_value());
-                    if(bender_controller.get_controller_value() < 1.0f){
-                        printf("HIT!\n");
-                        cuad.v += 1.0f;
-                        bender_controller.speed_up(1);
-                    } else {
-                        printf("MISS!\n");
-                        cuad.v -= 1.0f;
-                        bender_controller.slow_down(1);
-                    }
-                }
             }
-            //background.handle_input(game.event);
+
             camera.handle_input(game.event);
-            cuad.handle_input(game.event);
-
-            for(auto &go : gos){
-                go.handle_input(game.event);
-            }
+            mainGame.handle_input(game.event);
 
         }
+
+        mainGame.update();
+        mainGame.draw(game.renderer);
 
         log_system.update_text("CAMERA_X", std::to_string(Camera::x), game.renderer);
         log_system.update_text("CAMERA_Y", std::to_string(Camera::y), game.renderer);
-        log_system.update_text("GO_X", std::to_string(cuad.rct.x), game.renderer);
-        log_system.update_text("initial_seconds", std::to_string(lt), game.renderer);
-
-        cuad.update();
-        background.update();
-        bender_controller.update();
-
-        if(SDL_TICKS_PASSED(SDL_GetTicks(), timeout)){
-            for(auto &go : gos){
-                go.accelerate();
-            }
-
-            cuad.accelerate();
-
-            //printf("acc\n");
-
-            timeout = SDL_GetTicks() + 200+(rand()%200);
-        }
-
-        for(auto &go : gos){
-            go.update();
-        }
-
-        if(following) camera.follow(640/2, cuad);
-
-        background.draw(game.renderer);
-        cuad.draw(game.renderer);
-        
-        for(auto &go : gos){
-            if(go.laps == cuad.laps) go.draw(game.renderer);
-        }
-
-
-        //if(following) camera.update();
-
-        bender_controller.draw(game.renderer);
         log_system.draw(game.renderer);
-    
-        
         
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
     }
 
-    //for(auto go : gos){
-    //    delete go;
-    //}
-    //
-    
     game.close();
 }

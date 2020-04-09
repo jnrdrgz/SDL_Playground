@@ -53,6 +53,9 @@ public:
 
     float get_controller_value();
 
+    void start();
+    void start(int v);
+
 };
 
 #endif

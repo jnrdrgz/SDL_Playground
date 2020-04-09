@@ -23,6 +23,10 @@ void BendingBarController::set_vel(int v){
     bend_vel = v;
 }
 
+BendingBarController::BendingBarController(){
+
+}
+
 void BendingBarController::draw(SDL_Renderer* renderer){
 
     SDL_SetRenderDrawColor( renderer, 255,0,0, 255);

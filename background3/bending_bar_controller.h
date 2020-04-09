@@ -43,6 +43,7 @@ private:
     } 
 
 public:
+    BendingBarController();
     BendingBarController(int x, int y, int w, int h);
 
     void set_vel(int v);
