@@ -541,12 +541,12 @@ public:
             if(event.key.keysym.sym == SDLK_PLUS){
                 //cuad.v += 0.3f;
                 //cuad.accelerate();
-                player.v += 1.0f;
+                //player.v += 1.0f;
                 
             }
             if(event.key.keysym.sym == SDLK_MINUS){
                 //cuad.v -= 0.3f;
-                player.v -= 1.0f;
+                //player.v -= 1.0f;
                 
             }
             if(event.key.keysym.sym == SDLK_h){
