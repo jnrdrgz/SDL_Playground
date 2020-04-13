@@ -65,6 +65,7 @@ private:
     SDL_Rect rct;
 };
 
+int current_type_editor = 0;
 struct TilesTexture
 {
 public:
@@ -157,6 +158,15 @@ public:
         SDL_RenderCopy(renderer, TilesTexture::texture, &src, &dst);
     }
 
+    void handle_input(SDL_Event event){
+        if(event.type == SDL_MOUSEBUTTONDOWN){
+            if(event.button.x > dst.x && event.button.y > dst.y
+                && event.button.x < dst.x+dst.w && event.button.y < dst.y+dst.h)
+            {
+                set_type(current_type_editor);
+            }
+        }
+    }
 private:
     SDL_Rect src,dst;
 };
@@ -178,7 +188,7 @@ int main(int argc, char* args[])
     {0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,2,2,0},
     {0,0,0,2,2,2,2,2,2,0},
-    {0,0,0,2,1,1,1,1,2,0},
+    {0,0,0,2,3,3,3,3,2,0},
     {0,0,0,2,1,1,1,1,2,0},
     {2,2,2,2,1,1,1,1,2,0},
     {2,1,1,1,1,1,1,1,2,0},
@@ -229,10 +239,29 @@ int main(int argc, char* args[])
                 if(game.event.key.keysym.sym == SDLK_RIGHT){
                 
                 }
+                if(game.event.key.keysym.sym == SDLK_0){
+                    current_type_editor = 0;
+                }
+                if(game.event.key.keysym.sym == SDLK_1){
+                    current_type_editor = 1;
+                }
+                if(game.event.key.keysym.sym == SDLK_2){
+                    current_type_editor = 2;
+                }
+                if(game.event.key.keysym.sym == SDLK_3){
+                    current_type_editor = 3;
+                }
+                if(game.event.key.keysym.sym == SDLK_4){
+                    current_type_editor = 4;
+                }
+                if(game.event.key.keysym.sym == SDLK_5){
+                    current_type_editor = 5;
+                }
+                
             }
             for(int i = 0; i < 10; i++){
                 for(int j = 0; j < 10; j++){
-                    //tiles[i][j]->handle_input(game.event, game.renderer);
+                    tiles[i][j].handle_input(game.event);
                 }
             }
     
