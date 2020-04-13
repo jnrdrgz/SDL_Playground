@@ -10,9 +10,13 @@ int main(int argc, char* args[])
     Game game;
     game.init("test", 500, 500);
     log_system.init();
-    SDL_RenderSetScale(game.renderer,1,1);
 
-    SDL_Rect r = {0,0,100,100};
+    SDL_Rect outlineRect = { 0,0,100,100 };
+
+    
+    SDL_Texture* texture = nullptr;
+    texture = SDL_CreateTexture( game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 100, 100 );
+    
 
     while(game.running){
         
@@ -26,14 +30,22 @@ int main(int argc, char* args[])
                 
             }
             if(game.event.type == SDL_KEYDOWN){
+                if(game.event.key.keysym.sym == SDLK_RIGHT){
                 
+                }
             }
         }
 
+        SDL_SetRenderTarget(game.renderer, texture);
 
+        //SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, 0xFF );        
+        //SDL_RenderDrawRect( gRenderer, &outlineRect );
+
+        SDL_SetRenderTarget( game.renderer, NULL );
+        
         SDL_SetRenderDrawColor( game.renderer, 0, 0, 0, 255);
-        SDL_RenderFillRect(game.renderer, &r);
-           
+
+    
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
 

@@ -32,7 +32,32 @@ int main(int argc, char* args[])
         
         SDL_RenderClear(game.renderer);
 
+        const Uint8* state = SDL_GetKeyboardState(nullptr);
+        if(state[SDL_SCANCODE_X]){
+            printf("pressing x\n");
+        }
+        if(state[SDL_SCANCODE_Z]){
+            printf("pressing z\n");
+        }
+
+        if(state[SDL_SCANCODE_LEFT]){
+            angle -= 5;
+        }
+        if(state[SDL_SCANCODE_RIGHT]){
+            angle += 5;
+        }
+        if(state[SDL_SCANCODE_UP]){
+            dst.x += cos(deg_to_rad((float)(angle*-1))) * 4;
+            dst.y -= sin(deg_to_rad((float)(angle*-1))) * 4;
+        }
+
+        if(state[SDL_SCANCODE_DOWN]){
+            dst.x -= cos(deg_to_rad((float)(angle*-1))) * 4;
+            dst.y += sin(deg_to_rad((float)(angle*-1))) * 4;
+        }
+
         while(SDL_PollEvent(&game.event)){
+
             if(game.event.type == SDL_QUIT){
                 game.running = false;
             }
@@ -40,25 +65,25 @@ int main(int argc, char* args[])
         
                 
             }
-            if(game.event.type == SDL_KEYDOWN){
-                if(game.event.key.keysym.sym == SDLK_DOWN){
-                    angle += 3;
+            /*if(game.event.type == SDL_KEYDOWN){
+                if(game.event.key.keysym.sym == SDLK_RIGHT){
+                    angle += 5;
                 }
-                if(game.event.key.keysym.sym == SDLK_UP){
-                    angle -= 3;
+                if(game.event.key.keysym.sym == SDLK_LEFT){
+                    angle -= 5;
                 }
-
 
                 if(game.event.key.keysym.sym == SDLK_w){
-                    dst.x += cos(deg_to_rad((float)(angle*-1))) * 5;
-                    dst.y -= sin(deg_to_rad((float)(angle*-1))) * 5;
+                    dst.x += cos(deg_to_rad((float)(angle*-1))) * 7;
+                    dst.y -= sin(deg_to_rad((float)(angle*-1))) * 7;
                 }
 
                 if(game.event.key.keysym.sym == SDLK_s){
                     
                 }
-            }
+            }*/
         }
+
 
 
         SDL_SetRenderDrawColor( game.renderer, 0,0,0, 255);

@@ -96,16 +96,26 @@ public:
             if(event.key.keysym.sym == SDLK_UP){
                 y -= camera_vel;
             }
+
+            if(event.key.keysym.sym == SDLK_t){
+                camera_vel++;
+                printf("camera vel: %d\n", camera_vel);
+            }
+
+            if(event.key.keysym.sym == SDLK_g){
+                camera_vel--;
+                printf("camera vel: %d\n", camera_vel);
+            }
             if(event.key.keysym.sym == SDLK_PLUS){
                 if(!pressed){
-                    zoom += 0.5f;
+                    zoom += 0.25f;
                     pressed = true;
                     printf("zoom: %.2f\n", zoom);
                 }
             }
             if(event.key.keysym.sym == SDLK_MINUS){
                 if(!pressed){
-                    zoom -= 0.5f;
+                    if(zoom > 0.25f) zoom -= 0.25f;
                     pressed = true;
                     printf("zoom: %.2f\n", zoom);
                 }
@@ -157,6 +167,11 @@ SDL_Rect apply_camera_back_dst(SDL_Rect dst){
     //dst_2.w = (int)((float)dst_2.w * Camera::zoom);
     //dst_2.h = (int)((float)dst_2.h * Camera::zoom);
 
+    if(Camera::zoom < 1.0f){
+        dst_2.h = 100;
+    }
+
+
     return dst_2;
 }
 
@@ -164,7 +179,7 @@ SDL_Rect apply_camera_back_src(SDL_Rect src){
     SDL_Rect src_2 = src;
 
     int initial_pos = 0; // this should came from somewhere 
-    int back_img_length_x = (640*12) + initial_pos;
+    int back_img_length_x = (640*11) + initial_pos;
            
     if(Camera::x >=  back_img_length_x){
         src_2.x +=  back_img_length_x;
@@ -180,6 +195,16 @@ SDL_Rect apply_camera_back_src(SDL_Rect src){
         src_2.y += 480*0;
     } else if (Camera::y > 0){
         src_2.y += Camera::y;
+    }
+
+    /*if(Camera::zoom != 1.0f || Camera::zoom != 0.75f){
+        src_2.w = (640*4)*(1.0/Camera::zoom);
+    } else {
+        src_2.w *= 1.0f; 
+    }*/
+
+    if(Camera::zoom < 1.0f){
+        src_2.w = 7680;
     }
 
 
@@ -202,6 +227,8 @@ SDL_Rect apply_camera_object(SDL_Rect rct){
       
     //rct_2.w = (int)((float)rct_2.w * Camera::zoom);
     //rct_2.h = (int)((float)rct_2.h * Camera::zoom);
+    rct_2.w = (int)((float)rct_2.w * Camera::zoom);
+    rct_2.h = (int)((float)rct_2.h * Camera::zoom);
       
 
     return rct_2;
@@ -391,10 +418,11 @@ public:
     }
 
     void accelerate(){
-        if(v < max_v){
-            v += s;
-        }
-            
+        if(v < max_v){ v += s; }
+    }
+
+    void accelerate(float s){
+        if(v < max_v){ v += s; }
     }
 
     void reduce_v(){
@@ -471,20 +499,22 @@ public:
     void init(SDL_Renderer* renderer){
         background = Background(renderer);
         bender_controller = BendingBarController(350, 20, 100, 20);
-        player = GameObject(base_x, base_y, 255, 0, 0, 0.2f);
+        player = GameObject(base_x, base_y, 255, 0, 0, 1.0f);
 
         base_x += 15;
         base_y -= 50;
 
+        std::vector<float> velocities {1.0f,1.0f,1.0f,1.0f};
+
         for(int i = 0; i<4; i++){
             float s = ((float)(rand()%5))/10.0f;
-            s += 0.05f;
+            //s += 0.05f;
             printf("created %d s: %.2f\n", i,s);
-            rivals.push_back(GameObject(base_x, base_y, 0xed,0xff,0xea, s));
+            rivals.push_back(GameObject(base_x, base_y, 0xed,0xff,0xea, velocities[i]));
 
-            s = ((float)(rand()%5))/10.0f;
-            s += 0.05f;
-            tigers.push_back(GameObject(base_x-50, base_y, 0,0,0, s));
+            s -= 0.20f;
+            //s += 0.05f;
+            tigers.push_back(GameObject(base_x-50, base_y, 0,0,0, velocities[i]));
             
             base_x += 15;
             base_y -= 50;
@@ -596,6 +626,10 @@ public:
             for(int i = 0; i < rivals.size(); i++){
                 rivals[i].accelerate();
                 tigers[i].accelerate();
+                //if(rivals[i].rct.x > 3000)
+                //    tigers[i].accelerate();
+                //    tigers[i].accelerate();
+                //    tigers[i].accelerate();
             }
 
             player.accelerate();
