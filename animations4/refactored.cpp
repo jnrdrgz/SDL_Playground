@@ -34,6 +34,8 @@ public:
     AnimationImage(SDL_Renderer* r, std::string file_name, int init_f, int w, int h){
                         //int total_frames, int tfc, int w, int h){
 
+        row = 0;
+
         dst.x = 100;
         dst.y = 100;
         dst.w = w*2;
@@ -53,8 +55,13 @@ public:
 
     }
 
+    AnimationImage(SDL_Renderer* r, std::string file_name, int init_f, int row, int w, int h) : AnimationImage(r, file_name, init_f, w, h){
+        this->row = row;
+    }
+
     void update(int frame){
         src.x = src.w*(frame + initial_frame);
+        src.y = src.h*row;
     }
 
     void draw(SDL_Renderer* renderer){
@@ -75,7 +82,7 @@ public:
     SDL_Texture* texture = nullptr;
     int textureFrames_columns;
     int totalTextureFrames;
-    int initial_frame;
+    int initial_frame, row;
 
 };
 
@@ -230,7 +237,9 @@ public:
         //bool repite = true;
         //sprite.add("walking", repite)
 
-        steadyImage = SteadyImage(renderer);
+        //steadyImage = SteadyImage(renderer);
+        animations["steady"] = Animation(renderer);
+        animations["steady"].set_total_frames(1);
         animations["walking"] = Animation(renderer);
         animations["attacking"] = Animation(renderer, "maleBase/full/attacking.png", 0, 32, 64);
         animations["attacking"].set_total_frames(4);
@@ -255,7 +264,7 @@ public:
             animations["walking"].draw(renderer);
         } 
         if(steady){
-            steadyImage.draw(renderer);
+            animations["steady"].draw(renderer);
         }
         if(attacking){
             animations["attacking"].draw(renderer);
@@ -264,7 +273,7 @@ public:
 
     void hande_input(SDL_Event event){
         if(event.type == SDL_KEYDOWN){
-            if(event.key.keysym.sym == SDLK_RIGHT){
+            if(event.key.keysym.sym == SDLK_RIGHT && !attacking){
                 walking = true;
                 steady = false;
             }
@@ -286,7 +295,7 @@ public:
     }
 public:
     std::unordered_map<std::string, Animation> animations;
-    SteadyImage steadyImage;
+    //SteadyImage steadyImage;
     bool walking = false;
     bool steady = true;
     bool attacking = false;
