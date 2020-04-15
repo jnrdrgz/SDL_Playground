@@ -36,10 +36,10 @@ public:
 
         row = 0;
 
-        dst.x = 100;
-        dst.y = 100;
-        dst.w = w*2;
-        dst.h = h*2;
+        //dst.x = 100;
+        //dst.y = 100;
+        //dst.w = w*2;
+        //dst.h = h*2;
 
         src.x = 0;
         src.y = 0;
@@ -64,8 +64,8 @@ public:
         src.y = src.h*row;
     }
 
-    void draw(SDL_Renderer* renderer){
-        SDL_RenderCopyEx(renderer, texture, &src, &dst, 0, 0, SDL_FLIP_NONE);
+    void draw(SDL_Renderer* renderer, SDL_Rect* dst){
+        SDL_RenderCopyEx(renderer, texture, &src, dst, 0, 0, SDL_FLIP_NONE);
     }
 
     /*AnimatedTimeSprite(){
@@ -78,7 +78,7 @@ public:
     }*/
     
 public:
-    SDL_Rect dst, src;
+    SDL_Rect src;
     SDL_Texture* texture = nullptr;
     int textureFrames_columns;
     int totalTextureFrames;
@@ -203,8 +203,8 @@ public:
          finished = false;
     }
 
-    void draw(SDL_Renderer* renderer){
-        animationImage.draw(renderer);
+    void draw(SDL_Renderer* renderer, SDL_Rect* rct){
+        animationImage.draw(renderer, rct);
     }
 
     bool finished = false;
@@ -242,7 +242,18 @@ public:
         animations["steady"].set_total_frames(1);
         animations["walking"] = Animation(renderer);
         animations["attacking"] = Animation(renderer, "maleBase/full/attacking.png", 0, 32, 64);
-        animations["attacking"].set_total_frames(4);
+        animations["attacking"].set_total_frames(5);
+        animations["attacking"].set_duration(300);
+    }
+
+    void set_position(int x, int y){
+        dst.x = x;
+        dst.y = y;
+    }
+
+    void set_dimensions(int w, int h){
+        dst.w = w;
+        dst.h = h;
     }
 
     void update(){
@@ -257,17 +268,21 @@ public:
                 animations["attacking"].stop();
             }
         }
+
+        if(walking){
+            dst.x += 2;
+        }
     }
 
     void draw(SDL_Renderer* renderer){
         if(walking){
-            animations["walking"].draw(renderer);
+            animations["walking"].draw(renderer, &dst);
         } 
         if(steady){
-            animations["steady"].draw(renderer);
+            animations["steady"].draw(renderer, &dst);
         }
         if(attacking){
-            animations["attacking"].draw(renderer);
+            animations["attacking"].draw(renderer, &dst);
         }
     }
 
@@ -276,9 +291,10 @@ public:
             if(event.key.keysym.sym == SDLK_RIGHT && !attacking){
                 walking = true;
                 steady = false;
+
             }
 
-            if(event.key.keysym.sym == SDLK_a){
+            if(event.key.keysym.sym == SDLK_a && !attacking){
                 attacking = true;
                 animations["attacking"].restart();
                 steady = false;
@@ -300,6 +316,8 @@ public:
     bool steady = true;
     bool attacking = false;
 
+    SDL_Rect dst;
+
 };
 int main(int argc, char* args[])
 {
@@ -309,6 +327,9 @@ int main(int argc, char* args[])
     //Animation animation(game.renderer);
     GameObject animation(game.renderer);
     //animation.set_duration(1000);
+
+    animation.set_dimensions(32, 64);
+    animation.set_position(0, 150);
 
     while(game.running){
         
