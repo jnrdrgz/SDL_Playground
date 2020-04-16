@@ -3,6 +3,7 @@
 #include "../SDL_Needs/game.h"
 #include "../timer.h"
 
+
 static LogSystem log_system = LogSystem();
 
 //CONSIDERATIONS:
@@ -11,21 +12,46 @@ static LogSystem log_system = LogSystem();
 //all in the same texture
 //if some variable is true it has too reproduce an animation
 
+struct TextureCache
+{
+    TextureCache(){}
+
+    static SDL_Texture* get_texture(SDL_Renderer* renderer, std::string name){
+        auto t = textures.find(name);
+
+        if(t == textures.end()){        
+            SDL_Surface* tmp_srf = IMG_Load(name.c_str());
+            if(!tmp_srf){
+                printf("Error loading surface: \n, %s\n", SDL_GetError());
+                throw "error surface loading";
+            }
+
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, tmp_srf);
+            if(!texture){
+                printf("Error loading texture: \n, %s\n", SDL_GetError());
+                throw "Error loading texture";
+            }
+
+            SDL_FreeSurface(tmp_srf);
+
+            textures[name] = texture;
+            return texture;
+        }
+
+        return textures[name];
+    }
+
+private:
+    static std::unordered_map<std::string, SDL_Texture*> textures;
+};
+
+std::unordered_map<std::string, SDL_Texture*> TextureCache::textures;
+
 struct AnimationImage
 {
 public:
     void load_texture(SDL_Renderer* renderer, std::string file_name){
-        SDL_Surface* tmp_srf = IMG_Load(file_name.c_str());
-        if(!tmp_srf){
-            printf("Error loading surface: \n, %s\n", SDL_GetError());
-        }
-
-        texture = SDL_CreateTextureFromSurface(renderer, tmp_srf);
-        if(!texture){
-            printf("Error loading texture: \n, %s\n", SDL_GetError());
-        }
-
-        SDL_FreeSurface(tmp_srf);
+        texture = TextureCache::get_texture(renderer,file_name);
     }
 public:
     AnimationImage(){
@@ -68,69 +94,12 @@ public:
         SDL_RenderCopyEx(renderer, texture, &src, dst, 0, 0, SDL_FLIP_NONE);
     }
 
-    /*AnimatedTimeSprite(){
-        dst_rct.x = 100;
-        dst_rct.y = 100;
-        
-        anim_timer.set_limit(2000);   
-        frame_time_jump = anim_timer.get_limit()/totalTextureFrames;
-
-    }*/
-    
 public:
     SDL_Rect src;
     SDL_Texture* texture = nullptr;
     int textureFrames_columns;
     int totalTextureFrames;
     int initial_frame, row;
-
-};
-
-struct SteadyImage
-{
-public:
-    void load_texture(SDL_Renderer* renderer, std::string file_name){
-        SDL_Surface* tmp_srf = IMG_Load(file_name.c_str());
-        if(!tmp_srf){
-            printf("Error loading surface: \n, %s\n", SDL_GetError());
-        }
-
-        texture = SDL_CreateTextureFromSurface(renderer, tmp_srf);
-        if(!texture){
-            printf("Error loading texture: \n, %s\n", SDL_GetError());
-        }
-
-        SDL_FreeSurface(tmp_srf);
-    }
-public:
-    SteadyImage(){
-
-    }
-    SteadyImage(SDL_Renderer* r){ //std::string file_name, int init_f, int w, int h){
-                        //int total_frames, int tfc, int w, int h){
-
-        dst.x = 100;
-        dst.y = 100;
-        dst.w = 32*2;
-        dst.h = 64*2;
-
-        src.x = 0;
-        src.y = 0;
-        src.w = 32;
-        src.h = 64;
-
-        load_texture(r, "maleBase/full/advnt_full.png");
-
-    }
-
-    void draw(SDL_Renderer* renderer){
-        SDL_RenderCopyEx(renderer, texture, &src, &dst, 0, 0, SDL_FLIP_NONE);
-    }
-
-public:
-    SDL_Rect dst, src;
-    SDL_Texture* texture = nullptr;
-  
 
 };
 
@@ -154,6 +123,7 @@ public:
 
     Animation(SDL_Renderer* renderer, std::string name, int i_frame, int w, int h) : Animation(){
         animationImage = AnimationImage{renderer, name, i_frame, w, h};
+        //frame = 1;
     }
 
     void set_duration(Uint32 duration){
@@ -309,6 +279,7 @@ public:
             }
         }
     }
+    
 public:
     std::unordered_map<std::string, Animation> animations;
     //SteadyImage steadyImage;
@@ -319,6 +290,9 @@ public:
     SDL_Rect dst;
 
 };
+
+
+
 int main(int argc, char* args[])
 {
     Game game;
@@ -326,6 +300,7 @@ int main(int argc, char* args[])
     log_system.init();
     //Animation animation(game.renderer);
     GameObject animation(game.renderer);
+
     //animation.set_duration(1000);
 
     animation.set_dimensions(32, 64);
