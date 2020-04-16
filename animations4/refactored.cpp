@@ -58,14 +58,7 @@ public:
 
     }
     AnimationImage(SDL_Renderer* r, std::string file_name, int init_f, int w, int h){
-                        //int total_frames, int tfc, int w, int h){
-
         row = 0;
-
-        //dst.x = 100;
-        //dst.y = 100;
-        //dst.w = w*2;
-        //dst.h = h*2;
 
         src.x = 0;
         src.y = 0;
@@ -86,7 +79,7 @@ public:
     }
 
     void update(int frame){
-        src.x = src.w*(frame + initial_frame);
+        src.x = src.w*frame;
         src.y = src.h*row;
     }
 
@@ -100,7 +93,6 @@ public:
     int textureFrames_columns;
     int totalTextureFrames;
     int initial_frame, row;
-
 };
 
 struct Animation
@@ -109,7 +101,8 @@ public:
     Animation(){
         timer.start();
         stepTimer.start();
-        frame = 1;
+        frame = 0;
+        initialFrame = 0;
         totalFrames = 6;
         duration = 600;
         step = duration/totalFrames;
@@ -123,15 +116,17 @@ public:
 
     Animation(SDL_Renderer* renderer, std::string name, int i_frame, int w, int h) : Animation(){
         animationImage = AnimationImage{renderer, name, i_frame, w, h};
-        //frame = 1;
+        initialFrame = i_frame;
     }
 
     void set_duration(Uint32 duration){
         this->duration = duration;
+        step = duration/totalFrames;
     }
 
     void set_total_frames(int frames){
         totalFrames = frames;
+        step = duration/totalFrames;
     }
 
     void update(){
@@ -139,12 +134,12 @@ public:
             frame++;
             if(frame == totalFrames){
                 finished = true;
-                frame = 1;
+                frame = initialFrame;
             }
 
             stepTimer.stop();
-            stepTimer.start();
             steps_acomp++;
+            stepTimer.start();
             //printf("step\n");
         }
 
@@ -154,11 +149,11 @@ public:
 
             printf("%d\n",steps_acomp );
             steps_acomp = 0;
-            finished = false;
+            //finished = false;
             printf("restarted\n");
         }
 
-        animationImage.update(frame-1);
+        animationImage.update(frame);
     }
 
     void stop(){
@@ -182,7 +177,7 @@ private:
     Timer timer;
     Timer stepTimer;
     Uint32 duration;
-    int frame, totalFrames, step;
+    int frame, totalFrames, step, initialFrame;
     int steps_acomp = 0;
     AnimationImage animationImage;
 
@@ -192,6 +187,70 @@ private:
 struct Sprite
 {
 
+
+};
+
+struct Player
+{
+public:
+    Player(SDL_Renderer* renderer){
+        //bool repite = true;
+        //sprite.add("walking", repite)
+
+        //steadyImage = SteadyImage(renderer);
+        animations["steady"] = Animation(renderer, "spritesheet.png", 0, 169, 314);
+        animations["steady"].set_total_frames(1);
+        animations["steady"].set_duration(300);
+        animations["shot"] = Animation(renderer, "spritesheet.png", 0, 169, 314);
+        animations["shot"].set_total_frames(6);
+        animations["shot"].set_duration(1200);
+        
+    }
+
+    void set_dimensions(int w, int h){
+        dst.w = w;
+        dst.h = h;
+    }
+
+    void set_position(int x, int y){
+        dst.x = x;
+        dst.y = y;
+    }
+
+
+    void update(){
+        if(shooting){
+            animations["shot"].update();
+        } 
+    }
+
+    void draw(SDL_Renderer* renderer){
+        if(shooting){
+            animations["shot"].draw(renderer, &dst);
+        } 
+        if(steady){
+            animations["steady"].draw(renderer, &dst);  
+        }
+    }
+
+    void hande_input(SDL_Event event){
+        if(event.type == SDL_KEYDOWN){
+            if(event.key.keysym.sym == SDLK_a){
+                shooting = true;
+                steady = false;
+            }
+
+        }
+
+    }
+
+public:
+    std::unordered_map<std::string, Animation> animations;
+    //SteadyImage steadyImage;
+    bool shooting = false;
+    bool steady = true;
+
+    SDL_Rect dst;
 
 };
 
@@ -208,11 +267,10 @@ public:
         //sprite.add("walking", repite)
 
         //steadyImage = SteadyImage(renderer);
-        animations["steady"] = Animation(renderer);
-        animations["steady"].set_total_frames(1);
-        animations["walking"] = Animation(renderer);
+        animations["steady"] = Animation(renderer, "maleBase/full/advnt_full.png", 0, 32, 64);
+        animations["walking"] = Animation(renderer, "maleBase/full/advnt_full.png", 1, 32, 64);
         animations["attacking"] = Animation(renderer, "maleBase/full/attacking.png", 0, 32, 64);
-        animations["attacking"].set_total_frames(5);
+        animations["attacking"].set_total_frames(4);
         animations["attacking"].set_duration(300);
     }
 
@@ -227,7 +285,9 @@ public:
     }
 
     void update(){
+        ///VIEW THIS !!!!
         if(!steady){
+        //VIEW THIS !!! WALK/ATTTAK ERROR
             animations["walking"].update();
         }
         if(attacking){
@@ -261,7 +321,6 @@ public:
             if(event.key.keysym.sym == SDLK_RIGHT && !attacking){
                 walking = true;
                 steady = false;
-
             }
 
             if(event.key.keysym.sym == SDLK_a && !attacking){
@@ -291,7 +350,17 @@ public:
 
 };
 
+struct State
+{
+public:
+    virtual void handle_sinput(SDL_Event event) = 0;
+    virtual void handle_minput(Uint8* state) = 0;
+    virtual void update() = 0;
+    virtual void draw(SDL_Renderer* renderer) = 0;
+private:
+    Animation animation;
 
+};
 
 int main(int argc, char* args[])
 {
@@ -305,6 +374,11 @@ int main(int argc, char* args[])
 
     animation.set_dimensions(32, 64);
     animation.set_position(0, 150);
+
+    Player player(game.renderer);
+
+    player.set_dimensions(32*3, 64*3);
+    player.set_position(150, 150);
 
     while(game.running){
         
@@ -323,10 +397,14 @@ int main(int argc, char* args[])
                 }
             }
             animation.hande_input(game.event);
+            player.hande_input(game.event);
         }
 
         animation.update();
         animation.draw(game.renderer);
+
+        player.update();
+        player.draw(game.renderer);
 
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
