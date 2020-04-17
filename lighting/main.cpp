@@ -33,8 +33,8 @@ int main(int argc, char* args[])
 {
     Game game;
 
-    int testW = 500;
-    int testH = 500;
+    const int testW = 500;
+    const int testH = 500;
     game.init("test", testW, testH);
     log_system.init();
 

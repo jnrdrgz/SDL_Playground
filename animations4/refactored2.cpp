@@ -2,6 +2,7 @@
 #include "../log_system/log_system.h"
 #include "../SDL_Needs/game.h"
 #include "../timer.h"
+#include <vector>
 
 
 static LogSystem log_system = LogSystem();
@@ -185,210 +186,243 @@ private:
 
 };
 
-
-struct Sprite
-{
-
-
-};
-
-struct Player
-{
-public:
-    Player(SDL_Renderer* renderer){
-        //bool repite = true;
-        //sprite.add("walking", repite)
-
-        //steadyImage = SteadyImage(renderer);
-        animations["steady"] = Animation(renderer, "spritesheet.png", 0, 169, 314);
-        animations["shot"] = Animation(renderer, "spritesheet.png", 0, 169, 314);
-
-        animations["steady"].set_total_frames(1);
-        animations["steady"].set_duration(300);
-        animations["shot"].set_total_frames(6);
-        animations["shot"].set_duration(1200);
-        
-    }
-
-    void set_dimensions(int w, int h){
-        dst.w = w;
-        dst.h = h;
-    }
-
-    void set_position(int x, int y){
-        dst.x = x;
-        dst.y = y;
-    }
-
-
-    void update(){
-        if(shooting){
-            animations["shot"].update();
-        } 
-    }
-
-    void draw(SDL_Renderer* renderer){
-        if(shooting){
-            animations["shot"].draw(renderer, &dst);
-        } 
-        if(steady){
-            animations["steady"].draw(renderer, &dst);  
-        }
-    }
-
-    void hande_input(SDL_Event event){
-        if(event.type == SDL_KEYDOWN){
-            if(event.key.keysym.sym == SDLK_a){
-                shooting = true;
-                steady = false;
-            }
-
-        }
-
-    }
-
-public:
-    std::unordered_map<std::string, Animation> animations;
-    //SteadyImage steadyImage;
-    bool shooting = false;
-    bool steady = true;
-
-    SDL_Rect dst;
-
-};
-
-struct GameObject
-{
-public:
-    GameObject(){
-        //bool repite = true;
-        //sprite.add("walking", repite)
-
-    }
-    GameObject(SDL_Renderer* renderer){
-        //bool repite = true;
-        //sprite.add("walking", repite)
-
-        //steadyImage = SteadyImage(renderer);
-        animations["steady"] = Animation(renderer, "maleBase/full/advnt_full.png", 0, 32, 64);
-        animations["walking"] = Animation(renderer, "maleBase/full/advnt_full.png", 1, 32, 64);
-        animations["attacking"] = Animation(renderer, "maleBase/full/attacking.png", 0, 32, 64);
-        animations["attacking"].set_total_frames(4);
-        animations["attacking"].set_duration(300);
-    }
-
-    void set_position(int x, int y){
-        dst.x = x;
-        dst.y = y;
-    }
-
-    void set_dimensions(int w, int h){
-        dst.w = w;
-        dst.h = h;
-    }
-
-    void update(){
-        ///VIEW THIS !!!!
-        if(!steady){
-        //VIEW THIS !!! WALK/ATTTAK ERROR
-            animations["walking"].update();
-        }
-        if(attacking){
-            animations["attacking"].update();
-            if(animations["attacking"].finished){
-                attacking = false;
-                steady = true;
-                animations["attacking"].stop();
-            }
-        }
-
-        if(walking){
-            dst.x += 2;
-        }
-    }
-
-    void draw(SDL_Renderer* renderer){
-        if(walking){
-            animations["walking"].draw(renderer, &dst);
-        } 
-        if(steady){
-            animations["steady"].draw(renderer, &dst);
-        }
-        if(attacking){
-            animations["attacking"].draw(renderer, &dst);
-        }
-    }
-
-    void hande_input(SDL_Event event){
-        if(event.type == SDL_KEYDOWN){
-            if(event.key.keysym.sym == SDLK_RIGHT && !attacking){
-                walking = true;
-                steady = false;
-            }
-
-            if(event.key.keysym.sym == SDLK_a && !attacking){
-                attacking = true;
-                animations["attacking"].restart();
-                steady = false;
-                walking = false;
-            }
-        }
-
-        if(event.type == SDL_KEYUP){
-            if(event.key.keysym.sym == SDLK_RIGHT){
-                walking = false;
-                steady = true;
-            }
-        }
-    }
-    
-public:
-    std::unordered_map<std::string, Animation> animations;
-    //SteadyImage steadyImage;
-    bool walking = false;
-    bool steady = true;
-    bool attacking = false;
-
-    SDL_Rect dst;
-
-};
-
+struct Entity;
 struct State
 {
 public:
-    virtual void handle_sinput(SDL_Event event) = 0;
-    virtual void handle_minput(Uint8* state) = 0;
-    virtual void update() = 0;
-    virtual void draw(SDL_Renderer* renderer) = 0;
+	virtual ~State() = default;
+    virtual State* handle_sinput(Entity* entity, SDL_Event event) = 0;
+    virtual State* handle_minput(Entity* entity, const Uint8* key_state) = 0;
+    virtual State* update(Entity* entity) = 0;
+    virtual void draw(Entity* entity, SDL_Renderer* renderer) = 0;
 private:
     Animation animation;
 
 };
 
+struct Entity
+{
+public:
+	virtual ~Entity() = default;
+    virtual void update() = 0;
+    virtual void draw(SDL_Renderer* renderer) = 0;
+    virtual void handle_sinput(SDL_Event event) = 0;
+    virtual void handle_minput(const Uint8* key_state) = 0;
 
+protected:
+    State* state = nullptr;
+    Animation animation;
+    SDL_Rect rct;
+    //std::vector<State*> states;
+};
+
+struct PlayerState;
+struct Player : Entity
+{
+public:
+	//~Player(){}
+    
+	void set_state(State* _state){
+		if(_state != nullptr){
+    		delete state;
+    		state = _state;
+    		printf("state setted\n");
+    	}
+	}
+
+	void update() override{
+		State* new_state = state->update(this);
+    	if(new_state != nullptr){
+    		delete state;
+    		state = new_state;
+    	}
+	}
+    void draw(SDL_Renderer* renderer) override{
+    	//animation.draw(renderer, &rct);
+    }
+    void handle_sinput(SDL_Event event) override{
+    	State* new_state = state->handle_sinput(this, event);
+    	if(new_state != nullptr){
+    		delete state;
+    		state = new_state;
+    	}
+    }
+    void handle_minput(const Uint8* key_state) override{
+    	State* new_state = state->handle_minput(this, key_state);
+    	if(new_state != nullptr){
+    		delete state;
+    		state = new_state;
+    	}
+    }	
+};
+
+/*struct PlayerState : State
+{
+public:
+    virtual State* handle_sinput(Entity* entity, SDL_Event event) = 0;
+    virtual State* handle_minput(Entity* entity, const Uint8* key_state) = 0;
+    virtual State* update(Entity* entity) = 0;
+    virtual void draw(Entity* entity, SDL_Renderer* renderer) = 0;
+};*/
+
+struct SteadyPlayerState : State
+{
+public:
+    State* handle_sinput(Entity* entity, SDL_Event event) override;
+
+    State* handle_minput(Entity* entity, const Uint8* key_state) override;
+
+    State* update(Entity* entity) override;
+
+    void draw(Entity* entity, SDL_Renderer* renderer) override;
+
+};
+
+
+struct WalkingPlayerState : State
+{
+public:
+	WalkingPlayerState(){}
+    State* handle_sinput(Entity* entity, SDL_Event event) override{
+        if(event.type == SDL_KEYUP){
+            if(event.key.keysym.sym == SDLK_RIGHT){
+                printf("UPPPPPPPPPPPPPpp\n");
+                return new SteadyPlayerState();
+            }
+        }
+
+        return nullptr;
+    }
+
+    State* handle_minput(Entity* entity, const Uint8* key_state) override{
+        printf("updating WalkingPlayerState\n");
+    	return nullptr;
+    }
+
+    State* update(Entity* entity) override{
+    	return nullptr;
+    }
+
+    void draw(Entity* entity, SDL_Renderer* renderer) override{
+
+    }
+};
+
+
+State* SteadyPlayerState::handle_sinput(Entity* entity, SDL_Event event){
+    return nullptr;
+}
+
+State* SteadyPlayerState::handle_minput(Entity* entity, const Uint8* key_state){
+    printf("updating SteadyPlayerState\n");
+    if (key_state[SDL_SCANCODE_RIGHT]) {
+        return new WalkingPlayerState();
+    }
+
+    return nullptr;
+}
+
+State* SteadyPlayerState::update(Entity* entity){
+    return nullptr;
+}
+
+void SteadyPlayerState::draw(Entity* entity, SDL_Renderer* renderer){
+
+}
+
+
+
+/*
+struct SteadyPlayerState : State
+{
+public:
+    State* handle_sinput(Entity* entity, SDL_Event event) override{
+
+ 
+        return nullptr;
+    }
+
+    State* handle_minput(Entity* entity, const Uint8* key_state) override{
+    	printf("updating SteadyPlayerState\n");
+    	if (key_state[SDL_SCANCODE_RIGHT]) {
+    		return new WalkingPlayerState();
+        }
+
+        return nullptr;
+    }
+
+    State* update(Entity* entity) override{
+    	return nullptr;
+    }
+
+    void draw(Entity* entity, SDL_Renderer* renderer) override{
+
+    }
+
+};
+
+/*struct AttackingPlayerState : PlayerState
+{
+	void update() override{
+
+	}
+    void draw(SDL_Renderer* renderer) override{
+
+    }
+    void handle_sinput(SDL_Event event) override{
+
+    }
+    void handle_minput(Uint8* state) override{
+
+    }
+};
+
+struct WalkingPlayerState : PlayerState
+{
+	void update() override{
+
+	}
+    void draw(SDL_Renderer* renderer) override{
+
+    }
+    void handle_sinput(SDL_Event event) override{
+
+    }
+    void handle_minput(Uint8* state) override{
+
+    }
+};
+*/
 
 int main(int argc, char* args[])
 {
     Game game;
-    game.init("test", 500, 500);
+    game.init("test", 640, 480);
     log_system.init();
     //Animation animation(game.renderer);
-    GameObject animation(game.renderer);
+    //GameObject animation(game.renderer);
 
     //animation.set_duration(1000);
 
-    animation.set_dimensions(32, 64);
-    animation.set_position(0, 150);
+    //animation.set_dimensions(32, 64);
+    //animation.set_position(0, 150);
 
-    Player player(game.renderer);
+    Player player;
 
-    player.set_dimensions(32*3, 64*3);
-    player.set_position(150, 150);
+   	printf("player created\n");
+    player.set_state(new SteadyPlayerState());
+    printf("player state setted\n");
+    
+    //player.set_dimensions(32*3, 64*3);
+    //player.set_position(150, 150);
 
     while(game.running){
         
         SDL_RenderClear(game.renderer);
-
+        
+        const Uint8* state = SDL_GetKeyboardState(NULL);
+        player.handle_minput(state);
+        
         while(SDL_PollEvent(&game.event)){
             if(game.event.type == SDL_QUIT){
                 game.running = false;
@@ -401,15 +435,11 @@ int main(int argc, char* args[])
                 
                 }
             }
-            animation.hande_input(game.event);
-            player.hande_input(game.event);
+            player.handle_sinput(game.event);
+        
+            
         }
 
-        animation.update();
-        animation.draw(game.renderer);
-
-        player.update();
-        player.draw(game.renderer);
 
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
