@@ -11,6 +11,26 @@ static LogSystem log_system = LogSystem();
 const int screenw = 640;
 const int screenh = 480;
 
+enum class Collision{
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+};
+
+bool rct_collide(SDL_Rect a, SDL_Rect b){
+    if( a.x < b.x + b.w &&
+        a.x + a.w > b.x &&
+        a.y < b.y + b.h &&
+        a.y + a.h > b.y)
+    {
+        return true;
+    }
+
+    return false;
+
+}
+
 struct World;
 struct Body
 {
@@ -20,7 +40,7 @@ public:
     }
 
     Body(World& world);
-    Body(int x, int y, int w, int h, World& world);
+    Body(int x, int y, int w, int h, bool dynamic, World& world);
 
     void apply_force(Vector2 force);
     void update(World& world);
@@ -32,6 +52,7 @@ public:
     
     float mass;
     bool active, dynamic;
+    int id;
 };
 
 struct World
@@ -60,11 +81,13 @@ public:
     
     void draw(SDL_Renderer* renderer);
 
+
     int limit_xleft, limit_xright;
     int limit_yup, limit_ydown;
     SDL_Rect limit_rct;
     Vector2 gravity, wind;
     std::vector<Body> bodies;
+    int current_body_id = 0;
 };
 
 void Body::apply_force(Vector2 force){
@@ -75,43 +98,54 @@ void Body::apply_force(Vector2 force){
 }
 
 void Body::update(World& world){
-    apply_force(world.gravity);
-    apply_force(world.wind);
+    
+    if(dynamic){
+        apply_force(world.gravity);
+        apply_force(world.wind);
 
-    if(velocity.x < max_vel.x && velocity.x > -max_vel.x) velocity.x += acceleration.x;
-    if(velocity.y > -max_vel.y) velocity.y += acceleration.y;
+        if(velocity.x < max_vel.x && velocity.x > -max_vel.x) velocity.x += acceleration.x;
+        if(velocity.y > -max_vel.y) velocity.y += acceleration.y;
 
-    //printf("%.2f\n", acceleration.y);
+        //printf("%.2f\n", acceleration.y);
 
-    if((int)position.x < world.limit_xleft){
-        position.x = world.limit_xleft;
-        velocity.x *= -0.25f;
-    }
+        if((int)position.x < world.limit_xleft){
+            position.x = world.limit_xleft;
+            velocity.x *= -0.25f;
+        }
+            
+        if((int)position.x+rct.w > world.limit_xright){
+            position.x = world.limit_xright-rct.w;
+            velocity.x *= -0.25f;
+        }
         
-    if((int)position.x+rct.w > world.limit_xright){
-        position.x = world.limit_xright-rct.w;
-        velocity.x *= -0.25f;
-    }
-    
-    if((int)position.y < world.limit_yup){
-        position.y = world.limit_yup;
-        velocity.y *= -0.25f;
-    }
-    if((int)position.y+rct.h > world.limit_ydown){
-        position.y = world.limit_ydown-rct.h;
-        velocity.y *= -0.25f;
-        //printf("%.2f\n", velocity.y);
-    }
+        if((int)position.y < world.limit_yup){
+            position.y = world.limit_yup;
+            velocity.y *= -0.25f;
+        }
+        if((int)position.y+rct.h > world.limit_ydown){
+            position.y = world.limit_ydown-rct.h;
+            //velocity.y *= -0.25f;
+            velocity.y = 0.0f;
+            //printf("%.2f\n", velocity.y);
+        }
 
-    position.x += velocity.x;
-    position.y += velocity.y;
-    
-    
-    rct.x = position.x;
-    rct.y = position.y;
+        for(auto body : world.bodies){
+            if(rct_collide(rct, body.rct) && body.id != id && body.active){
+                printf("colliding\n");
+                velocity.y = -velocity.y;
+            }
+        }
 
-    acceleration.x = 0.0f;
-    acceleration.y = 0.0f;
+        position.x += velocity.x;
+        position.y += velocity.y;
+        
+        
+        rct.x = position.x;
+        rct.y = position.y;
+
+        acceleration.x = 0.0f;
+        acceleration.y = 0.0f;
+    }
 }
 
 void Body::draw(SDL_Renderer* renderer){
@@ -144,7 +178,7 @@ Body::Body(World& world): Body(){
     printf("body added\n");
 }
 
-Body::Body(int x, int y, int w, int h, World& world){
+Body::Body(int x, int y, int w, int h, bool dynamic, World& world){
     rct.x = x;
     rct.y = y;
     rct.w = w;
@@ -154,8 +188,13 @@ Body::Body(int x, int y, int w, int h, World& world){
     mass = 1.0f;
     max_vel.x = 4.0f;
     max_vel.y = 4.0f;
-    
-    world.bodies.push_back(*this);    
+    id = world.current_body_id++;
+    this->dynamic = dynamic; 
+    active = true;
+
+    world.bodies.push_back(*this);  
+
+    printf("body created with id %d\n", world.current_body_id); 
 }
 
 
@@ -169,7 +208,8 @@ int main(int argc, char* args[])
     Vector2 wind = Vector2(0.0f,0.0f);
     World world(gravity, wind);
 
-    Body body_test(200,200,15,15,world);
+    Body body_test(200,200,15,15,true,world);
+    Body body_test2(260,270,100,15,false,world);
 
     bool start = false;
     while(game.running){
