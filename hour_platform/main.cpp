@@ -16,6 +16,7 @@ enum class Collision{
     DOWN,
     LEFT,
     RIGHT,
+    NONE
 };
 
 bool rct_collide(SDL_Rect a, SDL_Rect b){
@@ -30,6 +31,21 @@ bool rct_collide(SDL_Rect a, SDL_Rect b){
     return false;
 
 }
+
+Collision rct_collide_c(SDL_Rect a, SDL_Rect b){
+    if( a.x < b.x + b.w &&
+        a.x + a.w > b.x &&
+        a.y < b.y + b.h &&
+        a.y + a.h > b.y)
+    {
+        if(a.y+a.w > b.y-b.w) return Collision::UP; 
+        printf("ayw: %d, by: %d\n", a.y+a.w,b.y);
+        return Collision::DOWN;
+    }
+
+    return Collision::NONE;
+}
+
 
 struct World;
 struct Body
@@ -71,6 +87,7 @@ public:
         limit_rct.w = limit_xright-limit_xleft;
         limit_rct.h = limit_ydown-limit_yup;
 
+        bodies.reserve(100);
     }
 
     World(Vector2 gravity, Vector2 wind) : World(){
@@ -133,9 +150,17 @@ void Body::update(World& world){
         }
 
         for(auto body : world.bodies){
-            if(rct_collide(rct, body.rct) && body.id != id && body.active){
-                printf("colliding\n");
-                velocity.y = -velocity.y;
+
+            if(body.id != id && body.active){
+                Collision col = rct_collide_c(rct, body.rct);
+                //printf("colliding\n");
+                if(col == Collision::UP){
+                    position.y = body.rct.y-rct.h;
+                    velocity.y = 0.0f;
+                } else {
+                    //velocity = -velocity;
+
+                }
             }
         }
 
@@ -206,6 +231,7 @@ Body& World::create_body(int x, int y, int w, int h, bool dynamic){
     //printf("to return body %d\n", current_body_id-1);
 
     //bodies.push_back(Body(x, y, w, h, dynamic, *this));  
+    if(current_body_id > 100) throw std::logic_error("maximun body capacity");
     bodies.emplace_back(x, y, w, h, dynamic, *this);
     return bodies.back();
 }
@@ -223,7 +249,13 @@ int main(int argc, char* args[])
 
     //Body body_test(200,200,15,15,true,world);
     Body& body_test = world.create_body(200,200,15,15,true);
-    world.create_body(260,270,100,15,false);
+    world.create_body(world.limit_xleft,270,50,15,false);
+    world.create_body(world.limit_xright-50,270,50,15,false);
+
+    world.create_body(200,270,50,15,false);
+    world.create_body(400,270,50,15,false);
+
+
     
     //world.bodies[0].mass = 5;
 
@@ -243,7 +275,7 @@ int main(int argc, char* args[])
                     //world.bodies[0].velocity.x = 0.0f;
                     //world.bodies[0].apply_force(Vector2(0.5f, 0.0f));
                     body_test.apply_force(Vector2(0.5f, 0.0f));
-
+            
                 }
                 if(game.event.key.keysym.sym == SDLK_LEFT){
                     //world.bodies[0].velocity.x = 0.0f;
