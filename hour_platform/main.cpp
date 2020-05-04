@@ -46,6 +46,7 @@ public:
     void update(World& world);
     void draw(SDL_Renderer* renderer);
 
+
     SDL_Rect rct;
     Vector2 velocity, acceleration, max_vel;
     Vector2 position;
@@ -80,6 +81,8 @@ public:
     void update();
     
     void draw(SDL_Renderer* renderer);
+
+    Body& create_body(int x, int y, int w, int h, bool dynamic);
 
 
     int limit_xleft, limit_xright;
@@ -192,9 +195,19 @@ Body::Body(int x, int y, int w, int h, bool dynamic, World& world){
     this->dynamic = dynamic; 
     active = true;
 
-    world.bodies.push_back(*this);  
+    //world.bodies.push_back(*this);  
 
     printf("body created with id %d\n", world.current_body_id); 
+
+}
+
+Body& World::create_body(int x, int y, int w, int h, bool dynamic){
+    //Body body = Body(x, y, w, h, dynamic, *this);
+    //printf("to return body %d\n", current_body_id-1);
+
+    //bodies.push_back(Body(x, y, w, h, dynamic, *this));  
+    bodies.emplace_back(x, y, w, h, dynamic, *this);
+    return bodies.back();
 }
 
 
@@ -204,16 +217,18 @@ int main(int argc, char* args[])
     game.init("Plat", screenw, screenh);
     log_system.init();
 
-    Vector2 gravity = Vector2(0.0f,0.03f);
+    Vector2 gravity = Vector2(0.0f,0.05f);
     Vector2 wind = Vector2(0.0f,0.0f);
     World world(gravity, wind);
 
-    Body body_test(200,200,15,15,true,world);
-    Body body_test2(260,270,100,15,false,world);
+    //Body body_test(200,200,15,15,true,world);
+    Body& body_test = world.create_body(200,200,15,15,true);
+    world.create_body(260,270,100,15,false);
+    
+    //world.bodies[0].mass = 5;
 
     bool start = false;
-    while(game.running){
-        
+    while(game.running){        
         SDL_RenderClear(game.renderer);
 
         while(SDL_PollEvent(&game.event)){
@@ -226,11 +241,14 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_KEYDOWN){
                 if(game.event.key.keysym.sym == SDLK_RIGHT){
                     //world.bodies[0].velocity.x = 0.0f;
-                    world.bodies[0].apply_force(Vector2(0.5f, 0.0f));
+                    //world.bodies[0].apply_force(Vector2(0.5f, 0.0f));
+                    body_test.apply_force(Vector2(0.5f, 0.0f));
+
                 }
                 if(game.event.key.keysym.sym == SDLK_LEFT){
                     //world.bodies[0].velocity.x = 0.0f;
-                    world.bodies[0].apply_force(Vector2(-0.5f, 0.0f));
+                    //world.bodies[0].apply_force(Vector2(-0.5f, 0.0f));
+                    body_test.apply_force(Vector2(-0.5f, 0.0f));
                 }
                 
                 if(game.event.key.keysym.sym == SDLK_s){
@@ -239,7 +257,8 @@ int main(int argc, char* args[])
 
                 if(game.event.key.keysym.sym == SDLK_UP){
                     //body_test.apply_force(Vector2(0.0f, 50.0f));
-                    world.bodies[0].apply_force(Vector2(0.0f, -2.0f));
+                    //world.bodies[0].apply_force(Vector2(0.0f, -2.0f));
+                    body_test.apply_force(Vector2(0.0f, -2.0f));   
                 }
             }
         }
