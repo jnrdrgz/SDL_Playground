@@ -38,9 +38,11 @@ Collision rct_collide_c(SDL_Rect a, SDL_Rect b){
         a.y < b.y + b.h &&
         a.y + a.h > b.y)
     {
-        if(a.y+a.w > b.y-b.w) return Collision::UP; 
+        if(a.y+a.h > b.y-b.h) return Collision::UP; 
+        if(a.y > b.y) return Collision::DOWN; 
+        
         printf("ayw: %d, by: %d\n", a.y+a.w,b.y);
-        return Collision::DOWN;
+        return Collision::RIGHT;
     }
 
     return Collision::NONE;
@@ -69,6 +71,7 @@ public:
     
     float mass;
     bool active, dynamic;
+    bool is_colliding = false;
     int id;
 };
 
@@ -123,9 +126,12 @@ void Body::update(World& world){
         apply_force(world.gravity);
         apply_force(world.wind);
 
-        if(velocity.x < max_vel.x && velocity.x > -max_vel.x) velocity.x += acceleration.x;
-        if(velocity.y > -max_vel.y) velocity.y += acceleration.y;
-
+        if(velocity.x < max_vel.x && velocity.x > -max_vel.x){ 
+            velocity.x += acceleration.x;
+        }
+        if(velocity.y > -max_vel.y){ 
+            velocity.y += acceleration.y;
+        }
         //printf("%.2f\n", acceleration.y);
 
         if((int)position.x < world.limit_xleft){
@@ -154,9 +160,13 @@ void Body::update(World& world){
             if(body.id != id && body.active){
                 Collision col = rct_collide_c(rct, body.rct);
                 //printf("colliding\n");
+                if(col != Collision::NONE) is_colliding = true;
+
                 if(col == Collision::UP){
                     position.y = body.rct.y-rct.h;
                     velocity.y = 0.0f;
+                } else if (col == Collision::DOWN){
+                    velocity.y = -velocity.y;
                 } else {
                     //velocity = -velocity;
 
@@ -214,8 +224,8 @@ Body::Body(int x, int y, int w, int h, bool dynamic, World& world){
     position.x = (float)x;
     position.y = (float)y;
     mass = 1.0f;
-    max_vel.x = 4.0f;
-    max_vel.y = 4.0f;
+    max_vel.x = 2.0f;
+    max_vel.y = 2.0f;
     id = world.current_body_id++;
     this->dynamic = dynamic; 
     active = true;
@@ -249,14 +259,13 @@ int main(int argc, char* args[])
 
     //Body body_test(200,200,15,15,true,world);
     Body& body_test = world.create_body(200,200,15,15,true);
+    Body& bullet = world.create_body(400,200,5,5,true);
     world.create_body(world.limit_xleft,270,50,15,false);
     world.create_body(world.limit_xright-50,270,50,15,false);
 
     world.create_body(200,270,50,15,false);
     world.create_body(400,270,50,15,false);
 
-
-    
     //world.bodies[0].mass = 5;
 
     bool start = false;
@@ -274,13 +283,17 @@ int main(int argc, char* args[])
                 if(game.event.key.keysym.sym == SDLK_RIGHT){
                     //world.bodies[0].velocity.x = 0.0f;
                     //world.bodies[0].apply_force(Vector2(0.5f, 0.0f));
-                    body_test.apply_force(Vector2(0.5f, 0.0f));
+                    if(body_test.velocity.x < 0) body_test.velocity.x = 0.0f;
+                    body_test.apply_force(Vector2(body_test.max_vel.x, 0.0f));
+                    printf("acc: %.2f, vel: %.2f\n", body_test.acceleration.x,body_test.velocity.x);
             
                 }
                 if(game.event.key.keysym.sym == SDLK_LEFT){
                     //world.bodies[0].velocity.x = 0.0f;
                     //world.bodies[0].apply_force(Vector2(-0.5f, 0.0f));
-                    body_test.apply_force(Vector2(-0.5f, 0.0f));
+                    if(body_test.velocity.x > 0) body_test.velocity.x = 0.0f;
+                    body_test.apply_force(Vector2(-body_test.max_vel.x, 0.0f));
+                    printf("acc: %.2f, vel: %.2f\n", body_test.acceleration.x,body_test.velocity.x);
                 }
                 
                 if(game.event.key.keysym.sym == SDLK_s){
@@ -292,11 +305,28 @@ int main(int argc, char* args[])
                     //world.bodies[0].apply_force(Vector2(0.0f, -2.0f));
                     body_test.apply_force(Vector2(0.0f, -2.0f));   
                 }
+
+                if(game.event.key.keysym.sym == SDLK_x){
+                    bullet.velocity.x = 0.0f;
+                    bullet.velocity.y = 0.0f;
+                    bullet.position.x = body_test.rct.x + body_test.rct.w;
+                    bullet.position.y = body_test.rct.y;
+                    bullet.apply_force(Vector2(1.0f,-1.5f));    
+                }
+
+            }
+
+            if(game.event.type == SDL_KEYUP){
+                if(game.event.key.keysym.sym == SDLK_RIGHT){
+                    //body_test.velocity.x = 0.0f;
+                }
+                if(game.event.key.keysym.sym == SDLK_LEFT){
+                    //body_test.velocity.x = 0.0f;
+                }
             }
         }
 
-        if(start)
-           world.update();
+        if(start) world.update();
         world.draw(game.renderer);
     
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
