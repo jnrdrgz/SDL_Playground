@@ -38,11 +38,12 @@ Collision rct_collide_c(SDL_Rect a, SDL_Rect b){
         a.y < b.y + b.h &&
         a.y + a.h > b.y)
     {
-        if(a.y+a.h > b.y-b.h) return Collision::UP; 
+        //if(a.y+a.h < b.y+b.h-3) return Collision::UP;
+        if(a.y+a.h - 5 < b.y+5) return Collision::UP; 
         if(a.y > b.y) return Collision::DOWN; 
         
         printf("ayw: %d, by: %d\n", a.y+a.w,b.y);
-        return Collision::RIGHT;
+        return Collision::DOWN;
     }
 
     return Collision::NONE;
@@ -166,7 +167,7 @@ void Body::update(World& world){
                     position.y = body.rct.y-rct.h;
                     velocity.y = 0.0f;
                 } else if (col == Collision::DOWN){
-                    velocity.y = -velocity.y;
+                    velocity = -velocity;
                 } else {
                     //velocity = -velocity;
 
@@ -265,6 +266,7 @@ int main(int argc, char* args[])
 
     world.create_body(200,270,50,15,false);
     world.create_body(400,270,50,15,false);
+    world.create_body(400,170,50,75,false);
 
     //world.bodies[0].mass = 5;
 
