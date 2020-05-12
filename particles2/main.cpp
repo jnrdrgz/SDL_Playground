@@ -47,6 +47,16 @@ public:
         wind.x = wx;
     }
     
+    Particle(int x, int y, int w, int h, float gy, float wx) : Particle(){
+        rct.x = x;
+        rct.y = y;
+        rct.w = w;
+        rct.h = h;
+
+        gravity.y = gy;
+        wind.x = wx;
+    }
+    
     
     void update(){
         time_left = lifetime - life.getTicks();
@@ -56,7 +66,9 @@ public:
         }
         
         if(active){
+            //if(fade) 
             color.a = (255*time_left)/lifetime;
+            color.g = (((255-95)*time_left)/lifetime)+95;
 
             speed += gravity;
             speed += wind;
@@ -75,13 +87,19 @@ public:
         SDL_RenderFillRect(renderer, &rct);
     }
 
+    void set_color(Uint8 r,Uint8 g,Uint8 b){
+        color.r = r;
+        color.g = g;
+        color.b = b;
+    }
+
     SDL_Rect rct;
     Vector2 velocity, speed, gravity, wind;
     float mass;
     Uint32 lifetime;
     int time_left;
     Timer life;
-    bool active;
+    bool active, fade;
 
     SDL_Color color;
 };
@@ -91,9 +109,11 @@ struct Emitter
 public:
     Emitter(){}
 
-    void push_particle(){
+    void push_particle(int x, int y){
         int d = random_between(5,15);
-        particles.push_back(Particle(320,240,d,d,random_betweenf(-0.5f,-0.1f),random_betweenf(-0.1f, 0.1f)));
+        Particle p(x,y,d,d,random_betweenf(-0.5f,-0.1f),random_betweenf(-0.1f, 0.04f));
+        p.set_color(255,255,0);
+        particles.push_back(p);
     }
 
     void update(){
@@ -114,6 +134,13 @@ public:
     Uint32 lifetime;
     SDL_Color color;
     std::vector<Particle> particles;
+
+    //
+    int particles_dimension; //only squares for now
+    float particles_g; //gravity
+    float particles_w; //wind
+    SDL_Color particles_color; //color
+
 };
 
 int main(int argc, char* args[])
@@ -134,6 +161,8 @@ int main(int argc, char* args[])
     bool start = false;
 
     Emitter emitter;
+    //Emitter emitter1;
+    //Emitter emitter2;
 
     while(game.running){
         
@@ -149,9 +178,16 @@ int main(int argc, char* args[])
             if(game.event.type == SDL_KEYDOWN){
                 if(game.event.key.keysym.sym == SDLK_RIGHT){
                     start = true;
+
+                    emitter.push_particle(320,240);
+                    emitter.push_particle(310,240);
+                    emitter.push_particle(330,240);
                 }
-                emitter.push_particle();
             }
+            if(game.event.type == SDL_MOUSEBUTTONDOWN){
+                emitter.push_particle(game.event.button.x,game.event.button.y);
+            }
+
         }
 
         SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
