@@ -7,12 +7,7 @@
 #include <vector>
 #include <algorithm> 
 
-#define RED 255, 0, 0
-#define GREEN 0, 255, 0
-#define BLUE 0, 0, 255
-
 static LogSystem log_system = LogSystem();
-
 int random_between(int mn, int mx){
     int n = rand()%(mx-mn)+mn;
     return n;
@@ -157,9 +152,13 @@ public:
     }
 
     void update(){
-        for(auto& particle : particles){
-            particle.update();
-        }
+       	//for(auto& particle : particles){
+       	//    particle.update();
+       	//}
+
+        particles.erase(std::remove_if(particles.begin(), particles.end(), 
+              [&](Particle& p) { p.update(); return !p.active; }),
+              particles.end());
     }
 
     void draw(SDL_Renderer* renderer){
@@ -183,41 +182,71 @@ public:
 
 };
 
-struct TestObj
+struct Bullet
 {
 public:
+	Bullet(int x, int y){
+		rct.x = x;
+		rct.y = y;
+		position.x = (float)x;
+		position.y = (float)y;
+
+		emitter.position.x = position.x;
+		emitter.position.y = position.y;
+		rct.w = 7;
+		rct.h = 7;
+		velocity.x = 5.0f;
+		velocity.y = 0.0f;
+	}
 
     void draw(SDL_Renderer* renderer){
-        SDL_RenderFillRect(renderer, &rct);
+    	if(shooted){
+    		SDL_SetRenderDrawColor(renderer, 0,0,0,255);
+        	SDL_RenderFillRect(renderer, &rct);
+        	emitter.draw(renderer);
+    	}
     }
 
+    void handle_event(SDL_Event event){
+    	if(event.type == SDL_KEYDOWN){
+            if(event.key.keysym.sym == SDLK_x){
+            	shooted = true;
+            }	
+        }
+    }
 
+    void update(){
+    	if(shooted){
+    		position += velocity;
+    		emitter.position.x = position.x;
+    		emitter.position.y = position.y+(rct.h/2);
+  
+    		emitter.particles_g = 0.05f;//random_betweenf(-0.1f,0.1f);
+			emitter.particles_w = random_betweenf(-0.1f, 0.0f);
+			emitter.push_particle(random_between(3,8), get_random_rainbow_color());
+    		emitter.update();
+ 
+    		rct.x = position.x;
+    		rct.y = position.y;
+    	}
+	}
     
     Emitter emitter;
     Vector2 position;
+    Vector2 velocity;
     SDL_Rect rct;
+    bool shooted = false;
 };
 
 int main(int argc, char* args[])
 {
     Game game;
-    game.init("test", 640, 480);
+    game.init("test", 500, 500);
     log_system.init();
 
-    //Particle particle;
-    //particle.rct.x = 320;
-    //particle.rct.y = 240;
-    //particle.rct.w = 20;
-    //particle.rct.h = 20;
+    Bullet test_bullet(0,250);
 
-    //particle.gravity.y = -0.05f;
-    //particle.wind.x = -0.03f;
-
-    bool start = false;
-
-    Emitter emitter(Vector2(320.0f,240.0f));
-    //Emitter emitter1;
-    //Emitter emitter2;
+    std::vector<Bullet> bullets;
 
     while(game.running){
         
@@ -232,58 +261,34 @@ int main(int argc, char* args[])
             }
             if(game.event.type == SDL_KEYDOWN){
                 if(game.event.key.keysym.sym == SDLK_RIGHT){
-                    start = true;
-
-
-                    //emitter.particles_g = random_betweenf(-0.5f,-0.1f);
-                    emitter.particles_g = 0.0f;
-                    emitter.particles_w = random_betweenf(-0.8f, -0.04f);
-                    SDL_Color color = {255,0,0};
-                    emitter.push_particle(random_between(3,8), get_random_rainbow_color());
-                    emitter.position.x += 10;
-                    //emitter.push_particle(310,240);
-                    //emitter.push_particle(330,240);
+                
+                }
+                if(game.event.key.keysym.sym == SDLK_z){
+                	test_bullet.shooted = true;
                 }
 
-                if(game.event.key.keysym.sym == SDLK_LEFT){
-                    start = true;
 
-                    SDL_Color color = {0,255,0};
-                    emitter.particles_g = random_betweenf(-0.5f,-0.1f);
-                    emitter.particles_w = random_betweenf(-0.1f, 0.04f);
-                    emitter.push_particle(random_between(5,15), get_random_rainbow_color());
-                    emitter.position.x -= 10;
-                    //emitter.push_particle(310,240);
-                    //emitter.push_particle(330,240);
+                if(game.event.key.keysym.sym == SDLK_x){
+    				Bullet bullet(0,250);
+    				bullet.shooted = true;
+    				bullets.push_back(bullet);
                 }
-
-                if(game.event.key.keysym.sym == SDLK_SPACE){
-                    for(int i = 0; i<30; i++){
-                        emitter.particles_g = random_betweenf(-0.8f,0.8f);
-                        emitter.particles_w = random_betweenf(-0.8f, 0.8f);
-                        emitter.push_particle(random_between(3,11), get_random_rainbow_color());
-                    }
-                }
-
             }
-            if(game.event.type == SDL_MOUSEBUTTONDOWN){
-                emitter.push_particle(game.event.button.x,game.event.button.y);
-            }
-
         }
-
-        SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
-        
-
-        //particle.update();
-        emitter.update();
-        
-        //particle.draw(game.renderer);
-
-        emitter.draw(game.renderer);
-
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
+
+        for(auto& bullet : bullets) bullet.update();
+
+        test_bullet.update();
+        SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
+        test_bullet.draw(game.renderer);
+		
+        for(auto bullet : bullets) bullet.draw(game.renderer);
+		
+		SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
+
+       
     }
     
     
