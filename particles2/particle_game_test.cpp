@@ -7,6 +7,10 @@
 #include <vector>
 #include <algorithm> 
 
+#define RED 255, 0, 0
+#define GREEN 0, 255, 0
+#define BLUE 0, 0, 255
+
 static LogSystem log_system = LogSystem();
 int random_between(int mn, int mx){
     int n = rand()%(mx-mn)+mn;
@@ -50,8 +54,9 @@ public:
         speed = Vector2(0.0f,0.0f);
         velocity = Vector2(0.0f,0.0f);
         color = {255,0,0,255};
-        lifetime = 1000; //ms
+        lifetime = 2000; //ms
         fade = true;
+        color_mod = false;
     }
 
     Particle(int x, int y, int w, int h, float gy, float wx) : Particle(){
@@ -86,8 +91,9 @@ public:
         
         if(active){
             if(fade) color.a = (255*time_left)/lifetime;
-            //color.g = (((255-95)*time_left)/lifetime)+95;
-
+            if(color_mod){
+            	color.g = (((255-130)*time_left)/lifetime)+130;
+			}
             speed += gravity;
             speed += wind;
             speed += velocity;
@@ -117,7 +123,7 @@ public:
     Uint32 lifetime;
     int time_left;
     Timer life;
-    bool active, fade;
+    bool active, fade, color_mod;
 
     SDL_Color color;
 };
@@ -145,9 +151,10 @@ public:
         particles.push_back(p);
     }
 
-    void push_particle(int d, SDL_Color color){
+    void push_particle(int d, SDL_Color color, bool color_mod = false){
         Particle p(position.x,position.y,d,d,particles_g,particles_w);
         p.set_color(color.r,color.g,color.b);
+        p.color_mod = color_mod;
         particles.push_back(p);
     }
 
@@ -166,6 +173,7 @@ public:
             particle.draw(renderer);
         }
     }
+
     
     Vector2 position;
     Vector2 velocity, speed, gravity;
@@ -179,7 +187,7 @@ public:
     float particles_g; //gravity
     float particles_w; //wind
     SDL_Color particles_color; //color
-
+    
 };
 
 struct Bullet
@@ -193,8 +201,8 @@ public:
 
 		emitter.position.x = position.x;
 		emitter.position.y = position.y;
-		rct.w = 7;
-		rct.h = 7;
+		rct.w = 1;
+		rct.h = 1;
 		velocity.x = 5.0f;
 		velocity.y = 0.0f;
 	}
@@ -221,9 +229,13 @@ public:
     		emitter.position.x = position.x;
     		emitter.position.y = position.y+(rct.h/2);
   
-    		emitter.particles_g = 0.05f;//random_betweenf(-0.1f,0.1f);
+    		emitter.particles_g = random_betweenf(-0.02f,0.05f);//0.05f;
 			emitter.particles_w = random_betweenf(-0.1f, 0.0f);
-			emitter.push_particle(random_between(3,8), get_random_rainbow_color());
+			int particle_dim = random_between(3,8);
+			SDL_Color color = {BLUE};
+			//emitter.push_particle(particle_dim, get_random_rainbow_color());
+    		emitter.push_particle(particle_dim, color, true);
+    		
     		emitter.update();
  
     		rct.x = position.x;

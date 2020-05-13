@@ -150,11 +150,14 @@ public:
         particles.push_back(p);
     }
 
-    void push_particle(int d, SDL_Color color){
+    void push_particle(int d, SDL_Color color, bool color_mode = false){
         Particle p(position.x,position.y,d,d,particles_g,particles_w);
         p.set_color(color.r,color.g,color.b);
+        
         particles.push_back(p);
     }
+
+
 
     void update(){
         for(auto& particle : particles){
