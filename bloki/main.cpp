@@ -35,7 +35,9 @@ public:
         rct.w = w;
         rct.h = h;
 
-        color = color;
+        color.r = color.r;
+        color.g = color.g;
+        color.b = color.b;
     }
 
     void draw(SDL_Renderer* renderer){
@@ -147,14 +149,14 @@ public:
     void handle_input(SDL_Event event){
         if(event.type == SDL_KEYDOWN){
             if(event.key.keysym.sym == SDLK_s){
-                ball.velocity.x = 2.0f;
-                ball.velocity.y = -2.0f;
+                ball.velocity.x = 4.0f;
+                ball.velocity.y = -4.0f;
             }
             if(event.key.keysym.sym == SDLK_RIGHT){
-                pad.velocity.x = 2.0f;
+                pad.velocity.x = 6.0f;
             }
             if(event.key.keysym.sym == SDLK_LEFT){
-                pad.velocity.x = -2.0f;
+                pad.velocity.x = -6.0f;
             }
         }
         if(event.type == SDL_KEYUP){
@@ -187,9 +189,11 @@ public:
         }
 
         for(auto& block : blocks){
-            if(rct_collide(block.rct, ball.rct)){
-                block.active = false;
-                ball.velocity.y *= -1;
+            if(block.active){
+                if(rct_collide(block.rct, ball.rct)){
+                    block.active = false;
+                    ball.velocity.y *= -1;
+                }
             }
         }
 
