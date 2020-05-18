@@ -1,0 +1,11 @@
+#level file example
+pad_size: 10
+pad_velocity: 10
+ball_size: 10
+ball_velocity: 10
+time: 220
+blocks: 111010101100011¿? #patron
+blocks: file_name¿? #otraopcion
+#temporal
+block_quantity:20 #seguidos en linea
+

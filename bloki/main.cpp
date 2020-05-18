@@ -35,9 +35,7 @@ public:
         rct.w = w;
         rct.h = h;
 
-        color.r = color.r;
-        color.g = color.g;
-        color.b = color.b;
+        this->color = color;
     }
 
     void draw(SDL_Renderer* renderer){
@@ -112,25 +110,33 @@ public:
         delimiter.w = w;
         delimiter.h = h;
 
-        pad.rct.w = delimiter.w/10;
-        pad.rct.h = delimiter.h/20;
+        pad.rct.w = delimiter.w/8;
+        pad.rct.h = delimiter.h/25;
         pad.rct.x = (delimiter.x + delimiter.x/2);
         pad.rct.y = (delimiter.y+delimiter.h) - pad.rct.h;
 
-        ball.rct.w = delimiter.w/30;
+        ball.rct.w = delimiter.w/36;
         ball.rct.h = ball.rct.w;
         ball.rct.x = pad.rct.x;
         ball.rct.y = pad.rct.y - ball.rct.h;
 
         int bx = delimiter.x + 20;
-        int by = delimiter.y + 20;
+        int by = delimiter.y + 40;
         int bw = delimiter.w / 20;
         int bh = delimiter.h / 40;
-        for(int i = 0; i < 10; i++){
-            SDL_Color color = {255,0,0};
+
+        for(int i = 0; i < 55; i++){
+            SDL_Color color = {255,0,0,0};
             blocks.push_back(Block(bx,by,bw,bh,color));
             bx += bw + 5;
+            if(bx > delimiter.x+delimiter.w){
+                bx = delimiter.x + 20;
+                by += bh+10;
+            }
         }
+
+        pad_vel = 7.0f;
+        ball_vel = 5.0f;
     }
 
     void draw(SDL_Renderer* renderer){
@@ -149,14 +155,14 @@ public:
     void handle_input(SDL_Event event){
         if(event.type == SDL_KEYDOWN){
             if(event.key.keysym.sym == SDLK_s){
-                ball.velocity.x = 4.0f;
-                ball.velocity.y = -4.0f;
+                ball.velocity.x = ball_vel;
+                ball.velocity.y = -ball_vel;
             }
             if(event.key.keysym.sym == SDLK_RIGHT){
-                pad.velocity.x = 6.0f;
+                pad.velocity.x = pad_vel;
             }
             if(event.key.keysym.sym == SDLK_LEFT){
-                pad.velocity.x = -6.0f;
+                pad.velocity.x = -pad_vel;
             }
         }
         if(event.type == SDL_KEYUP){
@@ -176,23 +182,47 @@ public:
         if(ball.rct.x < delimiter.x ||
             ball.rct.x + ball.rct.w > delimiter.x + delimiter.w){
             ball.velocity.x *= -1;
+
+            //test cleaner collsion
+            if(ball.rct.x + ball.rct.w > delimiter.x + delimiter.w){
+                ball.rct.x = delimiter.x + delimiter.w - ball.rct.w;
+            }
+            if(ball.rct.x < delimiter.x){
+                ball.rct.x = delimiter.x;
+            }
         }
 
         if(ball.rct.y < delimiter.y ||
             ball.rct.y + ball.rct.h > delimiter.y + delimiter.h){
             ball.velocity.y *= -1;
+
+            //test cleaner collsion
+            if(ball.rct.y + ball.rct.h > delimiter.y + delimiter.h){
+                ball.rct.y = delimiter.y + delimiter.h - ball.rct.h;
+            }
+            if(ball.rct.y < delimiter.y){
+                ball.rct.y = delimiter.y;
+            }
         }
-        
+
         if(rct_collide(pad.rct, ball.rct)){
             ball.velocity.y *= -1;
             ball.rct.y = pad.rct.y - ball.rct.h - 1; 
+            
+            if(ball.rct.x-pad.rct.x > pad.rct.w/2){
+                if(ball.velocity.x < 0) ball.velocity.x *= -1;
+            } else {
+                if(ball.velocity.x > 0) ball.velocity.x *= -1;
+            }
         }
 
+        bool already_destroyed_a_block = false;
         for(auto& block : blocks){
-            if(block.active){
-                if(rct_collide(block.rct, ball.rct)){
-                    block.active = false;
+            if(rct_collide(block.rct, ball.rct) && block.active){
+                block.active = false;
+                if(!already_destroyed_a_block){
                     ball.velocity.y *= -1;
+                    already_destroyed_a_block = true;
                 }
             }
         }
@@ -203,6 +233,7 @@ public:
     Ball ball;
     std::vector<Block> blocks;
     SDL_Rect delimiter;
+    float pad_vel, ball_vel;
 
 };
 
