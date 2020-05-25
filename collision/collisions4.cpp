@@ -83,6 +83,62 @@ Collision what_side_col(SDL_Rect a, SDL_Rect b, int vax, int vay){
     return Collision::NONE;
 }
 
+
+
+struct RigidBody
+{
+    RigidBody(){
+        rct = {130,100, 15, 15};
+        back = {130,100, 15, 15};
+    }
+
+    void draw(SDL_Renderer* renderer){
+        
+        SDL_SetRenderDrawColor(renderer, 255,0,0, 255);
+        
+        SDL_RenderFillRect(renderer, &rct);
+    }
+
+    void update(){
+        lx = rct.x;
+        ly = rct.y;
+        //rct.x += vx;
+        //rct.y += vy;
+    }
+
+    void handle_input(SDL_Event event){
+        if(event.key.keysym.sym == SDLK_RIGHT){
+            rct.x += vx;
+        }
+        if(event.key.keysym.sym == SDLK_LEFT){
+            rct.x -= vx;
+        }
+        if(event.key.keysym.sym == SDLK_DOWN){
+           rct.y += vy;
+        }
+        if(event.key.keysym.sym == SDLK_UP){
+           rct.y -= vy;
+        }
+    }
+
+    SDL_Rect rct,back;
+    int lx, ly;
+    int vx, vy;
+};
+
+Collision rb_rct_collision(RigidBody rb, SDL_Rect b){
+    SDL_Rect a = {rb.lx,rb.ly,rb.rct.w,rb.rct.h};
+    if(rct_collide(rb.rct, b)){
+        printf("%d, %d  \n", a.y+a.h,b.y);
+        if(a.y+a.h < b.y) return Collision::UP;
+        if(a.y > b.y+b.h) return Collision::DOWN;
+        if(a.x+a.w < b.x) return Collision::LEFT;
+        if(a.x > b.x+b.w) return Collision::RIGHT; 
+    }
+    
+    return Collision::NONE;
+}
+
 struct Platforms
 {
 public:
@@ -94,7 +150,7 @@ public:
     }
 
     void add(int x, int y){
-        SDL_Rect r = {x,y,90,15};
+        SDL_Rect r = {x,y,90,25};
         rcts.push_back(r); 
     }
 
@@ -139,11 +195,14 @@ int main(int argc, char* args[])
     game.init("test", 500, 500);
     log_system.init();
 
-    SDL_Rect r1 = {130,100, 15, 15};
+    //SDL_Rect r1 = {130,100, 15, 15};
+    RigidBody rb;
     SDL_Rect r2 = {200,200, 90, 15};
 
     int velx = 6;
     int vely = 6;
+    rb.vx = velx;
+    rb.vy = vely;
 
     std::string collision = "not";
     std::string where = "not";
@@ -152,7 +211,6 @@ int main(int argc, char* args[])
     log_system.add_text("where", where, game.renderer);
 
     Platforms plts;
-    
 
     int spacing = 75;
     for(int i = 0; i < 8; i++){
@@ -178,16 +236,16 @@ int main(int argc, char* args[])
             }
             if(game.event.type == SDL_KEYDOWN){
                 if(game.event.key.keysym.sym == SDLK_RIGHT){
-                    r1.x += velx;
+                    //r1.x += velx;
                 }
                 if(game.event.key.keysym.sym == SDLK_LEFT){
-                    r1.x -= velx;
+                    //r1.x -= velx;
                 }
                 if(game.event.key.keysym.sym == SDLK_DOWN){
-                    r1.y += vely;
+                    //r1.y += vely;
                 }
                 if(game.event.key.keysym.sym == SDLK_UP){
-                    r1.y -= vely;
+                    //r1.y -= vely;
                 }
 
                 if(game.event.key.keysym.sym == SDLK_m){
@@ -200,54 +258,74 @@ int main(int argc, char* args[])
                 printf("%d,%d\n",game.event.button.x, game.event.button.y );
                 
                 if(!pad_mode){
-                    r1.x = game.event.button.x;
-                    r1.y = game.event.button.y;
-                    velx = 6;
-                    vely = 6;
+                    rb.rct.x = game.event.button.x;
+                    rb.rct.y = game.event.button.y;
+                    rb.vx = 6;
+                    rb.vy = 6;
                 }
             }
             //plts.handle_input(game.event);
+            rb.handle_input(game.event);
         }
-        
-        SDL_SetRenderDrawColor( game.renderer, 255,0,0, 255);
-        SDL_RenderFillRect(game.renderer, &r1);
-        plts.draw(game.renderer);
-
-        r1.y += vely;
-
-        collision = "not";
-        for(auto r : plts.rcts){
-            if(rct_collide(r1, r)){
-            }
-
-            Collision col = what_side_col(r1, r,velx,vely);
-            if(col == Collision::UP){
-                vely = -6;
-            }
-            if(col == Collision::DOWN){
-                vely = 6;
-            }
-            if(col == Collision::NONE){}
-        }
-
-        r1.x += velx;
-        for(auto r : plts.rcts){
-            if(rct_collide(r1, r)){
+        /*for(auto r : plts.rcts){
+            if(rct_collide(rb.rct, r)){
                 collision = "colliding";
             }
+            Collision col = rb_rct_collision(rb, r);
 
-            Collision col = what_side_col(r1, r,velx,vely);
-            if(col == Collision::LEFT){
-                velx = -6;
+            if(col == Collision::UP){
+                rb.vy = -vely;
+                where = "up";
+            }
+            if(col == Collision::DOWN){
+                rb.vy = vely;
+                where = "down";
             }
             if(col == Collision::RIGHT){
-                velx = 6;
+                rb.vx = velx;
+                where = "right";
+            }
+            if(col == Collision::LEFT){
+                rb.vx = -velx;
+                where = "LEFT";
             }
             if(col == Collision::NONE){}
+        }*/
+
+        rb.update();
+        collision = "not";
+        Collision col = rb_rct_collision(rb, r2);
+        if(rct_collide(rb.rct, r2)){
+            collision = "colliding";
         }
+        if(col == Collision::UP){
+            //rb.vy = -vely;
+            where = "up";
+        }
+        if(col == Collision::DOWN){
+            //rb.vy = vely;
+            where = "down";
+        }
+        if(col == Collision::RIGHT){
+            //rb.vx = velx;
+            where = "right";
+        }
+        if(col == Collision::LEFT){
+            //rb.vx = -velx;
+            where = "left";
+        }
+        if(col == Collision::NONE){}
+
+
+        SDL_SetRenderDrawColor(game.renderer, 255,255,0, 255);
+        SDL_RenderFillRect(game.renderer, &r2);
+        rb.draw(game.renderer);
+        //plts.draw(game.renderer);
+
+
                 
-        if(r1.x>500 || r1.x<0) velx *= -1;
-        if(r1.y>500 || r1.y<0) vely *= -1;
+        if(rb.rct.x>500 || rb.rct.x<0) rb.vx *= -1;
+        if(rb.rct.y>500 || rb.rct.y<0) rb.vy *= -1;
 
         log_system.update_text("collision", collision, game.renderer);
         log_system.update_text("where", where, game.renderer);
