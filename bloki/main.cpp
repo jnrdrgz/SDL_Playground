@@ -3,12 +3,17 @@
 #include "../SDL_Needs/game.h"
 #include "../timer.h"
 #include "../particles/vector2.h"
+#include "../particles2/emitter.h"
+
 #include <vector>
 #include <algorithm>
 
 static LogSystem log_system = LogSystem();
 
-SDL_Color get_random_rainbow_color(){
+//
+//included in emitter
+//
+/*SDL_Color get_random_rainbow_color(){
     //Uint8 numbers[3] = {255,127,0};
     std::vector<Uint8> numbers = {255,127,0};
  
@@ -17,16 +22,16 @@ SDL_Color get_random_rainbow_color(){
     Uint8 r = numbers[0];
     Uint8 g = numbers[1];
     Uint8 b = numbers[2];
-    /*if(r == 0 && g == 0 && b == 0){
-        r = numbers[random()%2];
-        g = numbers[random()%2];
-        b = numbers[random()%2];
-    }*/
+    //if(r == 0 && g == 0 && b == 0){
+    //    r = numbers[random()%2];
+    //    g = numbers[random()%2];
+    //    b = numbers[random()%2];
+    //}
 
     SDL_Color color = {r,g,b,255};
 
     return color;
-}
+}*/
 
 bool rct_collide(SDL_Rect a, SDL_Rect b){
     if( a.x < b.x + b.w &&
@@ -223,9 +228,9 @@ public:
         ball.rct.y = pad.rct.y - ball.rct.h;
         printf("ball size: %d\n", ball_w);
         
-        pad_vel = 7.0f;
-        ball_velx = 5.0f;
-        ball_vely = 5.0f;
+        pad_vel = 10.0f;
+        ball_velx = 8.0f;
+        ball_vely = 8.0f;
     }
 
     void restart(){
@@ -243,6 +248,7 @@ public:
 
         pad.draw(renderer);
         ball.draw(renderer);
+        emitter.draw(renderer);
 
     }
 
@@ -279,6 +285,8 @@ public:
     void update(){
         pad.update();
         ball.update();
+        emitter.update();
+
 
         if(ball.rct.x < delimiter.x ||
             ball.rct.x + ball.rct.w > delimiter.x + delimiter.w){
@@ -355,10 +363,22 @@ public:
             }
         }
 
+        //emitter.particles_g = ball.velocity.x < 0.0f ? random_betweenf(0.1f, 0.3f) : random_betweenf(-0.3f, -0.1f);//random_betweenf(0.0f, (ball.velocity.x * -1.0f)/100.0f)
+        //emitter.particles_w = ball.velocity.y < 0.0f ? random_betweenf(0.1f, 0.3f) : random_betweenf(-0.3f, -0.1f);//random_betweenf(-0.8f, -0.04f);0};
+        emitter.particles_g = random_betweenf(0.1f, 0.3f);//random_betweenf(0.0f, (ball.velocity.x * -1.0f)/100.0f)
+        
+        emitter.particles_w = 0.0f;
+        for(int i = 0; i < 5; i++){
+            emitter.push_particle(random_between(1,5), get_random_rainbow_color());
+            emitter.position.x = random_between(ball.rct.x,ball.rct.x+ball.rct.w);
+            emitter.position.y = ball.rct.y+ball.rct.h;
+        }
+
     }
 
     Pad pad;
     Ball ball;
+    Emitter emitter;
     std::vector<Block> blocks;
     SDL_Rect delimiter;
     float pad_vel, ball_velx, ball_vely;
@@ -392,6 +412,8 @@ int main(int argc, char* args[])
             blocksGame.handle_input(game.event);
         }
 
+        SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
+        
         blocksGame.update();
         blocksGame.draw(game.renderer);
 
