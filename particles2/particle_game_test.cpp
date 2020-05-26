@@ -205,6 +205,8 @@ public:
 		rct.h = 1;
 		velocity.x = 5.0f;
 		velocity.y = 0.0f;
+		gravity.x = 0.0f;
+		gravity.y = 0.0f;
 	}
 
     void draw(SDL_Renderer* renderer){
@@ -225,14 +227,15 @@ public:
 
     void update(){
     	if(shooted){
+    		velocity += gravity;
     		position += velocity;
     		emitter.position.x = position.x;
     		emitter.position.y = position.y+(rct.h/2);
   
-    		emitter.particles_g = random_betweenf(-0.02f,0.05f);//0.05f;
+    		emitter.particles_g = random_betweenf(-0.02f,0.5f);//0.05f;
 			emitter.particles_w = random_betweenf(-0.1f, 0.0f);
 			int particle_dim = random_between(3,8);
-			SDL_Color color = {BLUE};
+			SDL_Color color = {GREEN};
 			//emitter.push_particle(particle_dim, get_random_rainbow_color());
     		emitter.push_particle(particle_dim, color, true);
     		
@@ -246,9 +249,12 @@ public:
     Emitter emitter;
     Vector2 position;
     Vector2 velocity;
+    Vector2 gravity;
     SDL_Rect rct;
     bool shooted = false;
 };
+
+
 
 int main(int argc, char* args[])
 {
