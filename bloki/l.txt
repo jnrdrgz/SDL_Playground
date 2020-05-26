@@ -1,0 +1,8 @@
+pad_size: 10
+pad_velocity: 10
+ball_size: 10
+ball_velocity: 10
+time: 220
+blocks: 111010101100011
+blocks: file_name
+block_quantity: 20 

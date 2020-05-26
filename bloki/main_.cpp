@@ -4,29 +4,8 @@
 #include "../timer.h"
 #include "../particles/vector2.h"
 #include <vector>
-#include <algorithm>
 
 static LogSystem log_system = LogSystem();
-
-SDL_Color get_random_rainbow_color(){
-    //Uint8 numbers[3] = {255,127,0};
-    std::vector<Uint8> numbers = {255,127,0};
- 
-    std::random_shuffle(numbers.begin(), numbers.end());
-
-    Uint8 r = numbers[0];
-    Uint8 g = numbers[1];
-    Uint8 b = numbers[2];
-    /*if(r == 0 && g == 0 && b == 0){
-        r = numbers[random()%2];
-        g = numbers[random()%2];
-        b = numbers[random()%2];
-    }*/
-
-    SDL_Color color = {r,g,b,255};
-
-    return color;
-}
 
 bool rct_collide(SDL_Rect a, SDL_Rect b){
     if( a.x < b.x + b.w &&
@@ -68,18 +47,6 @@ Collision what_side_col(SDL_Rect a, SDL_Rect b, int vax, int vay){
         if(a.x > b.x+b.w-_vax-1) return Collision::RIGHT; 
     }
     
-    return Collision::NONE;
-}
-
-Collision side(SDL_Rect a, SDL_Rect b, int vax, int vay){
-    printf("%d,%d\n",a.y+a.h,b.y);
-
-    int _vay = vay < 0 ? vay*-1 : vay;
-    int _vax = vax < 0 ? vax*-1 : vax; 
-    if(a.y+a.h < b.y+_vay) return Collision::UP;
-    if(a.y > b.y+b.h-_vay) return Collision::DOWN;
-    if(a.x+a.w < b.x+_vax) return Collision::LEFT;
-    if(a.x > b.x+b.w-_vax) return Collision::RIGHT; 
     return Collision::NONE;
 }
 
@@ -154,24 +121,12 @@ public:
         SDL_RenderFillRect(renderer, &rct);    
     }
 
-    void set_dimensions(int w, int h){
-        rct.w = w;
-        rct.h = h;
-
-        back.w = w;
-        back.h = h;
-    }
-
     void update(){
-        back.x = rct.x;
-        back.y = rct.y;
-
         rct.x += velocity.x;
         rct.y += velocity.y;
     }
 
     SDL_Rect rct;
-    SDL_Rect back;
     Vector2 velocity;
 
 };
@@ -181,16 +136,6 @@ struct BlocksGame
 {
 public:
     BlocksGame(int x, int y, int w, int h){
-        // for restart wo parameters
-        this->x = x;
-        this->y = y;
-        this->h = h;
-        this->w = w;
-
-        start(x,y,w,h);
-    }
-
-    void start(int x, int y, int w, int h){
         delimiter.x = x;
         delimiter.y = y;
         delimiter.w = w;
@@ -201,36 +146,29 @@ public:
         pad.rct.x = (delimiter.x + delimiter.x/2);
         pad.rct.y = (delimiter.y+delimiter.h) - pad.rct.h;
 
-        int ball_w = delimiter.w/42;
-        int ball_h = ball_w;
-        ball.set_dimensions(ball_w,ball_h);
+        ball.rct.w = delimiter.w/42;
+        ball.rct.h = ball.rct.w;
         ball.rct.x = pad.rct.x;
         ball.rct.y = pad.rct.y - ball.rct.h;
 
-        printf("ball size: %d\n", ball_w);
         int bx = delimiter.x + 20;
         int by = delimiter.y + 40;
         int bw = delimiter.w / 20;
         int bh = delimiter.h / 40;
 
         for(int i = 0; i < 55; i++){
-            SDL_Color color = get_random_rainbow_color();
+            SDL_Color color = {255,0,0,0};
             blocks.push_back(Block(bx,by,bw,bh,color));
             bx += bw + 5;
             if(bx > delimiter.x+delimiter.w-bw){
                 bx = delimiter.x + 20;
-                by += bh+(ball_w-5);
+                by += bh+10;
             }
         }
 
         pad_vel = 7.0f;
-        ball_velx = 2.0f;
-        ball_vely = 2.0f;
-    }
-
-    void restart(){
-        blocks.clear();
-        start(x, y, w, h);
+        ball_velx = 5.0f;
+        ball_vely = 5.0f;
     }
 
     void draw(SDL_Renderer* renderer){
@@ -251,13 +189,6 @@ public:
             if(event.key.keysym.sym == SDLK_s){
                 ball.velocity.x = ball_velx;
                 ball.velocity.y = -ball_vely;
-            }
-            if(event.key.keysym.sym == SDLK_t){
-                ball.velocity.x *= -1;
-                ball.velocity.y *= -1;
-            }
-            if(event.key.keysym.sym == SDLK_r){
-                restart();
             }
             if(event.key.keysym.sym == SDLK_RIGHT){
                 pad.velocity.x = pad_vel;
@@ -329,28 +260,22 @@ public:
                         printf("not vertical col\n");
                     }*/
 
-                    //Collision col = what_side_col(ball.rct, block.rct, (int)ball_velx,(int)ball_vely);
-                    Collision col = side(ball.back, block.rct, (int)ball_velx,(int)ball_vely);
-                    
-                    //v
+                    Collision col = what_side_col(ball.rct, block.rct, (int)ball_velx,(int)ball_vely);
                     if(col == Collision::UP){
-                        ball.velocity.y = -2.0f;
+                        ball.velocity.y = -5.0f;
                     }
                     if(col == Collision::DOWN){
-                        ball.velocity.y = 2.0f;
+                        ball.velocity.y = 5.0f;
                     }
                     if(col == Collision::LEFT){
-                        ball.velocity.x = -2.0f;
+                        ball.velocity.x = -5.0f;
                     }
                     if(col == Collision::RIGHT){
-                        ball.velocity.x = 2.0f;
+                        ball.velocity.x = 5.0f;
                     }
                     if(col == Collision::NONE){}
 
-                    ball.update();
-
                     already_destroyed_a_block = true;
-
                 }
             }
         }
@@ -362,7 +287,6 @@ public:
     std::vector<Block> blocks;
     SDL_Rect delimiter;
     float pad_vel, ball_velx, ball_vely;
-    int x,y,h,w;
 
 };
 
