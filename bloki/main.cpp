@@ -196,8 +196,23 @@ public:
         delimiter.w = w;
         delimiter.h = h;
 
-        pad.rct.w = delimiter.w/8;
-        pad.rct.h = delimiter.h/25;
+        int bx = delimiter.x + 20;
+        int by = delimiter.y + 40;
+        int bw = delimiter.w / 20;
+        int bh = delimiter.h / 40;
+
+        for(int i = 0; i < 100; i++){
+            SDL_Color color = get_random_rainbow_color();
+            blocks.push_back(Block(bx,by,bw,bh,color));
+            bx += bw;// + 5;
+            if(bx > delimiter.x+delimiter.w-bw-bw){
+                bx = delimiter.x + 20;
+                by += bh;//+(ball_w-5);
+            }
+        }
+
+        pad.rct.w = bw*2;
+        pad.rct.h = bh;//delimiter.h/25;
         pad.rct.x = (delimiter.x + delimiter.x/2);
         pad.rct.y = (delimiter.y+delimiter.h) - pad.rct.h;
 
@@ -206,26 +221,11 @@ public:
         ball.set_dimensions(ball_w,ball_h);
         ball.rct.x = pad.rct.x;
         ball.rct.y = pad.rct.y - ball.rct.h;
-
         printf("ball size: %d\n", ball_w);
-        int bx = delimiter.x + 20;
-        int by = delimiter.y + 40;
-        int bw = delimiter.w / 20;
-        int bh = delimiter.h / 40;
-
-        for(int i = 0; i < 55; i++){
-            SDL_Color color = get_random_rainbow_color();
-            blocks.push_back(Block(bx,by,bw,bh,color));
-            bx += bw + 5;
-            if(bx > delimiter.x+delimiter.w-bw){
-                bx = delimiter.x + 20;
-                by += bh+(ball_w-5);
-            }
-        }
-
+        
         pad_vel = 7.0f;
-        ball_velx = 2.0f;
-        ball_vely = 2.0f;
+        ball_velx = 5.0f;
+        ball_vely = 5.0f;
     }
 
     void restart(){
@@ -334,18 +334,18 @@ public:
                     
                     //v
                     if(col == Collision::UP){
-                        ball.velocity.y = -2.0f;
+                        ball.velocity.y = -5.0f;
                     }
                     if(col == Collision::DOWN){
-                        ball.velocity.y = 2.0f;
+                        ball.velocity.y = 5.0f;
                     }
                     if(col == Collision::LEFT){
-                        ball.velocity.x = -2.0f;
+                        ball.velocity.x = -5.0f;
                     }
                     if(col == Collision::RIGHT){
-                        ball.velocity.x = 2.0f;
+                        ball.velocity.x = 5.0f;
                     }
-                    if(col == Collision::NONE){}
+                    if(col == Collision::NONE){ball.velocity.x *=-1;ball.velocity.y *=-1;}//?? neve leave a collision wp resolve
 
                     ball.update();
 
