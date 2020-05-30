@@ -93,6 +93,8 @@ public:
     void load_img(SDL_Renderer* renderer){
         SDL_Surface* temp_surface = IMG_Load("back.png");
         texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
+        img_w = temp_surface->w;
+        img_h = temp_surface->h; 
         SDL_FreeSurface(temp_surface);
 
     }
@@ -125,12 +127,14 @@ public:
     SDL_Texture* texture = NULL;
     SDL_Rect src,dst,app_camera_src;
     int vx = 5, vy = 5;
+    int img_w,img_h;
     
 };
 
 void Camera::follow(GameObject g){
     if(g.rct.x-x > screen_w-g.rct.w){
         x += g.vx;
+        if(x > limitx-screen_w) x = limitx-screen_w;
     }
     if(g.rct.x-x < g.rct.w){
         x -= g.vx;
@@ -138,6 +142,7 @@ void Camera::follow(GameObject g){
     }
     if(g.rct.y-y > screen_h-g.rct.h){
         y += g.vy;
+        if(y > limity-screen_h) y = limity-screen_h;
     }
     if(g.rct.y-y < g.rct.h){
         y -= g.vy;
@@ -170,6 +175,11 @@ public:
         printf("Game Created\n");
         background = Background(renderer);
 
+        camera.limitx = background.img_w;
+        camera.limity = background.img_h;
+
+        printf("limits: %d, %d\n", camera.limitx, camera.limity);
+
         enemy.vx = 4;
         
     }
@@ -180,9 +190,13 @@ public:
         const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
         if(kbstate[SDL_SCANCODE_M]){
             camera.zoom = 2;
+            camera.x = player.rct.x;
+            camera.y = player.rct.y;
         }
         if(kbstate[SDL_SCANCODE_N]){
             camera.zoom = 1;
+            camera.x = player.rct.x;
+            camera.y = player.rct.y;
         }
         if(kbstate[SDL_SCANCODE_L]){
             camera.x += 5;
