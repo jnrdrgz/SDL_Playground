@@ -169,6 +169,9 @@ public:
     MainGame(SDL_Renderer* renderer){
         printf("Game Created\n");
         background = Background(renderer);
+
+        enemy.vx = 4;
+        
     }
 
     void handle_input(){
@@ -197,15 +200,20 @@ public:
 
     void update(){
         camera.follow(player);
+        enemy.rct.x += enemy.vx;
+                        //camera.limitx
+        if(enemy.rct.x > 640*3) enemy.vx = -4;
+        if(enemy.rct.x < 0) enemy.vx = 4;
     }
 
     void draw(SDL_Renderer* renderer){
         background.draw(renderer, camera);
-        player.draw(renderer, camera);    
+        player.draw(renderer, camera);
+        enemy.draw(renderer, camera);    
     }
     
 
-    GameObject player;
+    GameObject player, enemy;
     Background background;
     Camera camera;
 };
