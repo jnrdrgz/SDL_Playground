@@ -7,6 +7,13 @@
 const int screen_w = 640;
 const int screen_h = 360;
 
+const Uint32 doomfire[] = {0x070707,0x1f0707,0x2f0f07,0x470f07,0x571707,0x671f07, 0x771f07, 0x8f2707, 0x9f2f07, 0xaf3f07, 0xbf4707,0xc74707,0xDF4F07,0xDF5707,0xDF5707,0xD75F07,0xD7670F,0xcf6f0f,0xcf770f,0xcf7f0f,0xCF8717,0xC78717,0xC78F17, 0xC7971F, 0xBF9F1F, 0xBF9F1F, 0xBFA727, 0xBFA727, 0xBFAF2F, 0xB7AF2F, 0xB7B72F, 0xB7B737, 0xCFCF6F, 0xDFDF9F, 0xEFEFC7, 0xFFFFFF};
+
+Uint32 random_between(Uint32 mn, Uint32 mx){
+    Uint32 n = rand()%(mx-mn)+mn;
+    return n;
+}
+
 int distance(int target, int guess){
     if(target <= guess){
         return guess-target;
@@ -70,6 +77,29 @@ void paint_row(Uint32* pix, int row, int r, int g, int b){
     }
 }
 
+void paint_row_uint32(Uint32* pix, int row, uint32_t col){
+    pix += row*screen_w;
+    for (int i = 0; i < screen_w; ++i)
+    {
+        *pix = col;
+        pix++;
+    }
+}
+
+void paint_row_doomfire_random(Uint32* pix, int row, int doomfire_index){
+    
+    pix += row*screen_w;
+    for (int i = 0; i < screen_w; ++i)
+    {
+        int r_index = random_between(doomfire_index-5, doomfire_index);
+        if(r_index < 0) r_index = 0;
+        Uint32 col = doomfire[r_index];
+
+        *pix = col;
+        pix++;
+    }
+}
+
 void paint_frow(Uint32* pix){
     pix += 0*screen_w;
     for (int i = 0; i < screen_w; ++i)
@@ -80,6 +110,9 @@ void paint_frow(Uint32* pix){
         pix++;
     }
 }
+
+
+
 
 int main(int argc, char* args[])
 {
@@ -141,6 +174,28 @@ int main(int argc, char* args[])
             paint_row(pixels, bottom_row, 255,255,0);
             bottom_row--;
         }
+
+        if(kbstate[SDL_SCANCODE_I]){
+            Uint32 val = get_value(screen_h/2, bottom_row, 35);
+            Uint32 col = doomfire[val];
+            if(val > 3){
+                col = doomfire[random_between(val-3, val)];
+            }
+            paint_row_uint32(pixels, bottom_row, col);
+            printf("%d\n", get_value(screen_h, bottom_row, 35));
+
+            bottom_row--;
+        }
+
+        if(kbstate[SDL_SCANCODE_O]){
+            Uint32 val = get_value(screen_h/2, bottom_row, 35);
+            
+            paint_row_doomfire_random(pixels, bottom_row, val);
+            printf("%d\n", get_value(screen_h, bottom_row, 35));
+
+            bottom_row--;
+        }
+
 
         if(kbstate[SDL_SCANCODE_H]){
             paint_frow(pixels);
