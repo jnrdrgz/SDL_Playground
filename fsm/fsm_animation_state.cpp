@@ -95,6 +95,8 @@ int main(int argc, char* args[])
 
     MainGame mainGame;
     mainGame.state = std::make_unique<GameMenuState>();
+
+    //Animation(game.renderer, "assets/img.png", 3, 2, 3, 16, 16, 600)
     
     while(game.running){
         
