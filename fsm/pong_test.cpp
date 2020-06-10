@@ -10,37 +10,103 @@
 
 const int screen_w = 640;
 const int screen_h = 480;
+bool pressed;
 
+struct Text
+{
+    Text(std::string text, int x, int y, int size) : 
+    text{text},
+    w{size*(int)text.length()},
+    h{size},
+    rct{x,y,w,h}
+    {
+
+    }
+
+    Text(std::string text, int x, int y, int size, SDL_Color color, SDL_Renderer* renderer, TTF_Font* font) : 
+    Text(text, x, y, size)
+    {
+        load_texture(color, renderer, font);
+    }
+        
+    void draw(SDL_Renderer* renderer) const{
+        SDL_RenderCopy( renderer, texture, NULL, &rct);
+    }
+
+    void load_texture(SDL_Color color, SDL_Renderer* renderer, TTF_Font* font){        
+        if(texture){
+            SDL_DestroyTexture(texture);
+            texture = NULL;
+        }
+        
+        if(!font){
+            printf("error in font: %s\n", SDL_GetError());
+        }
+
+        SDL_Surface* textSurface = TTF_RenderText_Solid( font, text.c_str(), color );
+        
+        if(!textSurface){
+            printf("error in surface: %s\n", SDL_GetError());
+        }
+
+        texture = SDL_CreateTextureFromSurface( renderer, textSurface );
+        
+        if(!texture){
+            printf("error in texture: %s\n", SDL_GetError());
+        }
+
+        SDL_FreeSurface(textSurface);
+    }
+
+    std::string text;
+    int w,h;
+    SDL_Rect rct;
+    SDL_Texture* texture = NULL;
+    
+};
 
 struct State;
 
 namespace Pong
 {
+    TTF_Font* font = TTF_OpenFont("8-bit.ttf", 25);
+
     struct MenuButton
     {
         MenuButton(std::string text, int x, int y, int w, int h) 
-        : text{text},
+        : text_str{text},
         rct{x,y,w,h}, 
-        selected{false}
+        selected{false},
+        textured{false},
+        text{text, x, y, h, {255,0,0,0}, NULL, font}
+        {}
+
+        MenuButton(std::string text, int x, int y, int w, int h, SDL_Renderer* renderer) 
+        : text_str{text},
+        rct{x,y,w,h}, 
+        selected{false},
+        textured{true},
+        text{text, x, y, h, {255,0,0,0}, renderer, font}
         {}
 
         void draw(SDL_Renderer* renderer) const{
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             if(selected) SDL_RenderFillRect(renderer, &rct);
             else SDL_RenderDrawRect(renderer, &rct);
+            if(textured) text.draw(renderer);
         }
         //std::unique_ptr<State> handle_input();
-        std::string text;
+        std::string text_str;
         SDL_Rect rct;
-        //text text
+        Text text;
         bool selected;
+        bool textured;
     };
 
     struct Menu
     {
         Menu(int x, int y, int w, int h, int padding)
-        : container{x,y,w,h},
-        pressed{false}
+        : container{x,y,w,h}
         {
             printf("%d,%d\n", container.x, container.y);
             int button_x = container.x + padding;
@@ -57,7 +123,7 @@ namespace Pong
                 button_y += button_h + padding;
             }
             for(auto& button : buttons){
-                if(button.text == "Play"){
+                if(button.text_str == "Play"){
                     button.selected = true;
                 }
             }
@@ -75,7 +141,7 @@ namespace Pong
 
         SDL_Rect container;
         std::vector<MenuButton> buttons;
-        bool pressed;
+        Uint8 last_state = 0;
     };
     struct Game
     {
@@ -94,9 +160,7 @@ namespace Pong
 
         SDL_Rect paddle_p1{0,0,25,100}, paddle_p2{screen_w-25,screen_h-100,25,100}, ball{200,200,25,25};
         bool ended{false}, paused{true};
-    };
-
-    
+    };    
 }
 
 struct State
@@ -105,14 +169,37 @@ public:
     virtual std::unique_ptr<State> update() = 0;
     virtual std::unique_ptr<State> handle_input() = 0;
     virtual std::unique_ptr<State> draw(SDL_Renderer* renderer) = 0;
+    std::string tag;
 };
+
+struct GameExitState : State 
+{
+public: 
+    GameExitState() 
+    {
+        tag = "Exit";
+    }
+
+    std::unique_ptr<State> update() override{
+        return nullptr;
+    }
+    std::unique_ptr<State> handle_input() override{
+        return nullptr;
+    }
+    std::unique_ptr<State> draw(SDL_Renderer* renderer) override{
+        return nullptr;
+    }
+};
+
 
 struct GameMenuState : State 
 {
 public: 
     GameMenuState() : 
     menu{200, 100, 200, 160, 10}
-    {}
+    {
+        tag = "Menu";
+    }
 
     std::unique_ptr<State> update() override{
         return nullptr;
@@ -129,6 +216,9 @@ public:
 struct GamePlayingState : State 
 {
 public: 
+    GamePlayingState(){
+        tag = "Menu";
+    }
     std::unique_ptr<State> update() override{
         game.update();
         if(game.ended){
@@ -163,7 +253,6 @@ public:
 
 std::unique_ptr<State> GameMenuState::handle_input(){
     const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
-    menu.handle_input();
     if(kbstate[SDL_SCANCODE_A]){
         printf("Pressing A in Menu State\n");
         return std::make_unique<GamePlayingState>();
@@ -171,15 +260,21 @@ std::unique_ptr<State> GameMenuState::handle_input(){
     if(kbstate[SDL_SCANCODE_M]){
         printf("Pressing M in Menu State\n");
     }
-    return nullptr;
+    return menu.handle_input();
 }
 
 struct MainGame
 {
-    void update(){
+    bool update(){
         auto n_state = state->update();
         if(n_state){
             state = std::move(n_state);
+        }
+
+        if(state->tag == "Exit"){
+            return false;
+        } else {
+            return true;
         }
     }
     void handle_input() {
@@ -220,7 +315,10 @@ std::unique_ptr<State> Pong::Game::handle_input(){
 
 std::unique_ptr<State> Pong::Menu::handle_input(){
     const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
-    if(kbstate[SDL_SCANCODE_DOWN]){
+    
+    //printf("kb_s_dow: %d,l_s: %d\n", kbstate[SDL_SCANCODE_DOWN],last_state);
+    //printf("kb_s_up: %d,l_s: %d\n", kbstate[SDL_SCANCODE_UP],last_state);
+    if(kbstate[SDL_SCANCODE_DOWN] && !pressed){
         for(int i = 0; i < 4; i++){
             if(buttons[i].selected){
                 if(i != 3){
@@ -234,9 +332,10 @@ std::unique_ptr<State> Pong::Menu::handle_input(){
             }
         }
 
-        //pressed = true;
+        pressed = true;
     }
-    if(kbstate[SDL_SCANCODE_UP]){
+
+    if(kbstate[SDL_SCANCODE_UP] && !pressed){
         for(int i = 0; i < 4; i++){
             if(buttons[i].selected){
                 if(i != 0){
@@ -250,7 +349,29 @@ std::unique_ptr<State> Pong::Menu::handle_input(){
             }
         }
 
-        //pressed = true;   
+        pressed = true;   
+    }
+
+    if(kbstate[SDL_SCANCODE_RETURN]){
+        for(int i = 0; i < 4; i++){
+            if(buttons[i].selected){
+                printf("button %d selected\n", i);
+                if(i == 0){
+                    return std::make_unique<GamePlayingState>();
+                }
+                if(i == 1){
+                    //return std::make_unique<GameOptionsState>();
+                    return nullptr;
+                }
+                if(i == 2){
+                    //return std::make_unique<GameHighScoresState>();
+                    return nullptr;
+                }
+                if(i == 3){
+                    return std::make_unique<GameExitState>();
+                }
+            }
+        }
     }
 
 
@@ -290,9 +411,16 @@ int main(int argc, char* args[])
                 
                 }
             }
+            if(game.event.type == SDL_KEYUP){
+                switch(game.event.key.keysym.sym){
+                    case SDLK_UP:
+                    case SDLK_DOWN:
+                        pressed = false;
+                }
+            }
         }
 
-        mainGame.update();
+        if(!mainGame.update()) game.running = false;
         mainGame.draw(game.renderer);
 
     
