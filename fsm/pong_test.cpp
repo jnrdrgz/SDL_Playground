@@ -26,7 +26,7 @@ struct Text
     Text(std::string text, int x, int y, int size, SDL_Color color, SDL_Renderer* renderer, TTF_Font* font) : 
     Text(text, x, y, size)
     {
-        load_texture(color, renderer, font);
+        if(renderer) load_texture(color, renderer, font);
     }
         
     void draw(SDL_Renderer* renderer) const{
@@ -39,21 +39,14 @@ struct Text
             texture = NULL;
         }
         
-        if(!font){
-            printf("error in font: %s\n", SDL_GetError());
-        }
+        if(!font) printf("error in font: %s\n", SDL_GetError());
 
         SDL_Surface* textSurface = TTF_RenderText_Solid( font, text.c_str(), color );
+        if(!textSurface) printf("error in surface: %s\n", SDL_GetError());
         
-        if(!textSurface){
-            printf("error in surface: %s\n", SDL_GetError());
-        }
-
-        texture = SDL_CreateTextureFromSurface( renderer, textSurface );
+        if(renderer) texture = SDL_CreateTextureFromSurface( renderer, textSurface );
+        if(!texture) printf("error in texture: %s\n", SDL_GetError());
         
-        if(!texture){
-            printf("error in texture: %s\n", SDL_GetError());
-        }
 
         SDL_FreeSurface(textSurface);
     }
@@ -78,7 +71,7 @@ namespace Pong
         rct{x,y,w,h}, 
         selected{false},
         textured{false},
-        text{text, x, y, h, {255,0,0,0}, NULL, font}
+        text{text, x, y, h}
         {}
 
         MenuButton(std::string text, int x, int y, int w, int h, SDL_Renderer* renderer) 
@@ -307,7 +300,6 @@ std::unique_ptr<State> Pong::Game::handle_input(){
         printf("Pressing P in Pong::Game::handle_input\n");
         paused = false;
     }
-
 
     return nullptr;
 }
