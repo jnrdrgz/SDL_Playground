@@ -1,16 +1,57 @@
 #include <SDL2/SDL.h>
-//#include "../log_system/log_system.h"
-#include "../SDL_Needs/game.h"
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include "../timer.h"
 #include <vector>
 #include <memory>
 #include <string>
 
-//static LogSystem log_system = LogSystem();
-
 const int screen_w = 640;
 const int screen_h = 480;
 bool pressed = false;
+
+namespace SDL{
+	struct Game
+	{
+	public:
+	    void init(const char* title, int screenw, int screenh){
+		    SDL_Init( SDL_INIT_VIDEO );
+		    SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" );
+		    window = SDL_CreateWindow( title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenw, screenh, SDL_WINDOW_SHOWN );
+		    renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
+		    SDL_SetRenderDrawColor( renderer, 0xFF, 0xFF, 0xFF, 0xFF );
+		    
+		    TTF_Init();
+		    IMG_Init(IMG_INIT_PNG);
+		    //Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 );
+
+		    font = TTF_OpenFont("8-bit.ttf", 25); 
+
+		    running = true;
+		}
+
+	    void close(){
+		    SDL_DestroyWindow(window);
+		    SDL_DestroyRenderer(renderer);
+		    //Mix_Quit();
+			IMG_Quit();
+		    TTF_Quit();
+		    SDL_Quit();
+		}
+
+		static SDL_Renderer *renderer;
+
+    	static TTF_Font* font;
+		SDL_Event event;
+	    bool running = false;
+		
+	private:
+		SDL_Window *window = NULL;
+	};
+}
+
+SDL_Renderer* SDL::Game::renderer = NULL;
+TTF_Font* SDL::Game::font = NULL;
 
 struct RenderManager
 {
@@ -31,8 +72,8 @@ struct RenderManager
         return texture;
     }
 
-    SDL_Texture* get_text_texture(std::string text, SDL_Color color, TTF_Font* font){
-        SDL_Surface* textSurface = TTF_RenderText_Solid( font, text.c_str(), color );
+    SDL_Texture* get_text_texture(std::string text, SDL_Color color){
+        SDL_Surface* textSurface = TTF_RenderText_Solid( SDL::Game::font, text.c_str(), color );
         if(!textSurface) printf("error in surface: %s\n", SDL_GetError());
         
         SDL_Texture* texture = NULL;
@@ -59,28 +100,13 @@ struct Text
 
     }
 
-    Text(std::string text, int x, int y, int size, SDL_Color color, SDL_Renderer* renderer, TTF_Font* font);
+    Text(std::string text, int x, int y, int size, SDL_Color color, SDL_Renderer* renderer);
         
     void draw(SDL_Renderer* renderer) const{
         SDL_RenderCopy( renderer, texture, NULL, &rct);
     }
 
-    void load_texture(SDL_Color color, SDL_Renderer* renderer, TTF_Font* font){        
-        if(texture){
-            SDL_DestroyTexture(texture);
-            texture = NULL;
-        }
-        
-        if(!font) printf("error in font: %s\n", SDL_GetError());
-
-        SDL_Surface* textSurface = TTF_RenderText_Solid( font, text.c_str(), color );
-        if(!textSurface) printf("error in surface: %s\n", SDL_GetError());
-        
-        if(renderer) texture = SDL_CreateTextureFromSurface( renderer, textSurface );
-        if(!texture) printf("error in texture: %s\n", SDL_GetError());        
-
-        SDL_FreeSurface(textSurface);
-    }
+    void load_texture(SDL_Color color);
 
     std::string text;
     int w,h;
@@ -93,8 +119,6 @@ struct State;
 
 namespace Pong
 {
-    TTF_Font* font = TTF_OpenFont("8-bit.ttf", 25);
-
     struct MenuButton
     {
         MenuButton(std::string text, int x, int y, int w, int h) : 
@@ -105,7 +129,7 @@ namespace Pong
         text{text, x, y, h}
         {}
 
-        MenuButton(std::string text, int x, int y, int w, int h, SDL_Renderer* renderer);
+        MenuButton(std::string text, int x, int y, int w, int h, bool textured);
 
         void draw(SDL_Renderer* renderer) const{
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -139,7 +163,7 @@ namespace Pong
             buttons.reserve(n_texts);
             for(int i = 0; i < n_texts; i++){
                 bool textured = true;
-                buttons.emplace_back(texts[i],button_x,button_y,button_w,button_h);
+                buttons.emplace_back(texts[i],button_x,button_y,button_w,button_h,true);
                 button_y += button_h + padding;
             }
             for(auto& button : buttons){
@@ -396,22 +420,48 @@ std::unique_ptr<State> Pong::Menu::handle_input(){
     return nullptr;
 }
 
-Text::Text(std::string text, int x, int y, int size, SDL_Color color, SDL_Renderer* renderer, TTF_Font* font) : 
-Text(text, x, y, size)
-{
-    if(renderer) load_texture(color, renderer, font);
+
+void Text::load_texture(SDL_Color color){        
+    if(!SDL::Game::renderer){
+    	printf("ERROR NOT RENDERER LOADED\n");
+    	printf("error in font: %s\n", SDL_GetError());
+    }
+    if(texture){
+        SDL_DestroyTexture(texture);
+        texture = NULL;
+    }
+    
+    if(!SDL::Game::font){
+    	printf("Error loading font\n");
+    	printf("error: %s\n", SDL_GetError());
+    }
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid( SDL::Game::font, text.c_str(), color );
+    if(!textSurface) printf("error in surface: %s\n", SDL_GetError());
+    
+    if(SDL::Game::renderer) texture = SDL_CreateTextureFromSurface( SDL::Game::renderer, textSurface );
+    if(!texture) printf("error in texture: %s\n", SDL_GetError());        
+
+    SDL_FreeSurface(textSurface);
 }
 
-Pong::MenuButton::MenuButton(std::string text, int x, int y, int w, int h, SDL_Renderer* renderer) : 
+Text::Text(std::string text, int x, int y, int size, SDL_Color color, SDL_Renderer* renderer) : 
+Text(text, x, y, size)
+{
+    if(renderer) load_texture(color);
+}
+
+Pong::MenuButton::MenuButton(std::string text, int x, int y, int w, int h, bool textured) : 
     text_str{text},
     rct{x,y,w,h}, 
     selected{false},
     textured{true},
-    text{text, x, y, h, {255,0,0,0}, renderer, font}{}
+    text{text, x, y, h, {255,0,0,0}, SDL::Game::renderer}{}
 
 
 int main(int argc, char* args[])
 {
+	using namespace SDL;
     Game game;
     game.init("test", screen_w, screen_h);
 
