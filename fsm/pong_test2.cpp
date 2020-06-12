@@ -53,42 +53,6 @@ namespace SDL{
 SDL_Renderer* SDL::Game::renderer = NULL;
 TTF_Font* SDL::Game::font = NULL;
 
-struct RenderManager
-{
-    RenderManager(SDL_Renderer* renderer) :
-    renderer{renderer}    
-    {}
-
-    SDL_Texture* get_img_texture(std::string file_name){
-        SDL_Surface* surface = IMG_Load(file_name.c_str());
-        if(!surface) printf("error in surface: %s\n", SDL_GetError());
-        
-        SDL_Texture* texture = NULL;
-        if(renderer){
-            texture = SDL_CreateTextureFromSurface( renderer, surface );
-            if(!texture) printf("error in texture: %s\n", SDL_GetError());
-        }
-
-        return texture;
-    }
-
-    SDL_Texture* get_text_texture(std::string text, SDL_Color color){
-        SDL_Surface* textSurface = TTF_RenderText_Solid( SDL::Game::font, text.c_str(), color );
-        if(!textSurface) printf("error in surface: %s\n", SDL_GetError());
-        
-        SDL_Texture* texture = NULL;
-        if(renderer){
-            texture = SDL_CreateTextureFromSurface( renderer, textSurface );
-            if(!texture) printf("error in texture: %s\n", SDL_GetError());
-        }        
-
-        SDL_FreeSurface(textSurface);
-        return texture;
-    }
-
-    SDL_Renderer* renderer = NULL;
-};
-
 struct Text
 {
     Text(std::string text, int x, int y, int size) : 
@@ -126,7 +90,7 @@ namespace Pong
         rct{x,y,w,h}, 
         selected{false},
         textured{false},
-        text{text, x, y, h}
+        text{text, x, y, h-20}
         {}
 
         MenuButton(std::string text, int x, int y, int w, int h, bool textured);
@@ -456,7 +420,9 @@ Pong::MenuButton::MenuButton(std::string text, int x, int y, int w, int h, bool 
     rct{x,y,w,h}, 
     selected{false},
     textured{true},
-    text{text, x, y, h, {255,0,0,0}, SDL::Game::renderer}{}
+    text{text, x+5, y+5, h-10, {255,0,0,0}, SDL::Game::renderer}{
+        printf("%d\n", h);
+    }
 
 
 int main(int argc, char* args[])
