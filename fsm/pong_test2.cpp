@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include<sstream>
 
 const int screen_w = 640;
 const int screen_h = 480;
@@ -55,9 +56,9 @@ TTF_Font* SDL::Game::font = NULL;
 
 struct Text
 {
-    Text(std::string text, int x, int y, int size) : 
-    text{text},
-    w{size*(int)text.length()},
+    Text(std::string text_str, int x, int y, int size) : 
+    text_str{text_str},
+    w{size*(int)text_str.length()},
     h{size},
     rct{x,y,w,h}
     {
@@ -65,14 +66,19 @@ struct Text
     }
 
     Text(std::string text, int x, int y, int size, SDL_Color color, SDL_Renderer* renderer);
+    
+    Text(std::string text, int x, int y, int size, SDL_Color color);
         
-    void draw(SDL_Renderer* renderer) const{
-        SDL_RenderCopy( renderer, texture, NULL, &rct);
+    void draw() const{
+        SDL_RenderCopy( SDL::Game::renderer, texture, NULL, &rct);
     }
 
     void load_texture(SDL_Color color);
+    void set_text_str(std::string new_str){
+        text_str = new_str;         
+    }
 
-    std::string text;
+    std::string text_str;
     int w,h;
     SDL_Rect rct;
     SDL_Texture* texture = NULL;
@@ -99,7 +105,7 @@ namespace Pong
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             if(selected) SDL_RenderFillRect(renderer, &rct);
             else SDL_RenderDrawRect(renderer, &rct);
-            if(textured) text.draw(renderer);
+            if(textured) text.draw();
         }
 
         //std::unique_ptr<State> handle_input();
@@ -115,14 +121,15 @@ namespace Pong
         Menu(int x, int y, int w, int h, int padding)
         : container{x,y,w,h}
         {
+            const int n_texts = 3;
+
             printf("%d,%d\n", container.x, container.y);
             int button_x = container.x + padding;
             int button_y = container.y + padding;
             int button_w = container.w - (padding*2);
-            int button_h = (container.h/4) - (padding*2);
+            int button_h = (container.h/n_texts) - (padding*2);
 
-            const int n_texts = 4;
-            std::string texts[n_texts] = {"Play", "???", "Options", "Exit"}; 
+            std::string texts[n_texts] = {"1 Player", "2 Players", "Exit"}; 
 
             buttons.reserve(n_texts);
             for(int i = 0; i < n_texts; i++){
@@ -131,7 +138,7 @@ namespace Pong
                 button_y += button_h + padding;
             }
             for(auto& button : buttons){
-                if(button.text_str == "Play"){
+                if(button.text_str == "1 Player"){
                     button.selected = true;
                 }
             }
@@ -163,7 +170,9 @@ namespace Pong
         padv{6}, pad2v{6},
         points1{0},points2{0},
         container_center_x{(container.w/2)+container.x},
-        container_center_y{(container.h/2)+container.y}
+        container_center_y{(container.h/2)+container.y},
+        points1text{"0", container_center_x-((paddle_p1.h/2)+10), container.y, paddle_p1.h/2, {0,0,0,0}},
+        points2text{"0", container_center_x+((paddle_p1.h/2)-10), container.y, paddle_p1.h/2, {0,0,0,0}}
         {
             int diveder_w = paddle_p1.w/2;
             
@@ -194,65 +203,84 @@ namespace Pong
             if(kbstate[SDL_SCANCODE_DOWN]){
                 padv = 6;
             }
+
+            if(kbstate[SDL_SCANCODE_P]){
+                paused = true;
+            }
+            if(kbstate[SDL_SCANCODE_U]){
+                paused = false;
+            }
         }
         
         void update(){
-            //vel update
-            ball.x += ballvx;
-            ball.y += ballvy;
-            paddle_p1.y += padv;
+            if(!paused){
+                //vel update
+                ball.x += ballvx;
+                ball.y += ballvy;
+                paddle_p1.y += padv;
 
-            //pad collision
-            if(rct_collide(paddle_p1,ball)){
-                ballvx = base_v;
-            }
-            if(rct_collide(paddle_p2,ball)){
-                ballvx = -base_v;
-            }
-
-            //enemy AI
-            if(ball.x > container.x+(container.w/2) && ballvx > 0){
-                if(ball.y > paddle_p2.y){
-                    paddle_p2.y += pad2v;
+                //pad collision
+                if(rct_collide(paddle_p1,ball)){
+                    ballvx = base_v;
+                }
+                if(rct_collide(paddle_p2,ball)){
+                    ballvx = -base_v;
                 }
 
-                if(ball.y < paddle_p2.y){
-                    paddle_p2.y -= pad2v;
+                //enemy AI
+                if(ball.x > container.x+(container.w/2) && ballvx > 0){
+                    if(ball.y > paddle_p2.y){
+                        paddle_p2.y += pad2v;
+                    }
+
+                    if(ball.y < paddle_p2.y){
+                        paddle_p2.y -= pad2v;
+                    }
                 }
+
+                //check of someone lose
+                if(ball.x < container.x){
+                    ballvx = base_v;
+                    ball.x = (container.x + container.w)/2;
+                    ball.y = (container.y + container.h)/2;
+                    printf("lose 1\n");
+                    points2++;
+                    std::stringstream _score;
+                    _score << points2;
+                    points2text.text_str = _score.str();
+                    points2text.load_texture({0,0,0,0});
+                }  
+                
+                if(ball.x + ball.w > container.x+container.w){
+                    ballvx = -base_v;
+                    ball.x = (container.x + container.w)/2;
+                    ball.y = (container.y + container.h)/2;
+                    printf("lose 2\n");
+                    points1++;
+                    std::stringstream _score;
+                    _score << points1;
+                    points1text.text_str = _score.str();
+                    points1text.load_texture({0,0,0,0});
+                }
+                
+                //check ball dont trepass boundaries
+                if(ball.y+ball.h > container.y+container.h) ballvy = -base_v;
+                if(ball.y < container.y) ballvy = base_v; 
+
+                //check paddles dont trepass boundaries
+                if(paddle_p1.y < container.y) paddle_p1.y = container.y; 
+                if(paddle_p1.y+paddle_p1.h > container.y+container.h) paddle_p1.y = container.y+container.h-paddle_p1.h;
+
+                if(paddle_p2.y < container.y) paddle_p2.y = container.y; 
+                if(paddle_p2.y+paddle_p2.h > container.y+container.h) paddle_p2.y = container.y+container.h-paddle_p2.h;
             }
-
-            //check of someone lose
-            if(ball.x < container.x){
-                ballvx = base_v;
-                ball.x = (container.x + container.w)/2;
-                ball.y = (container.y + container.h)/2;
-                printf("lose 1\n");
-                points2++;
-            }  
-            
-            if(ball.x + ball.w > container.x+container.w){
-                ballvx = -base_v;
-                ball.x = (container.x + container.w)/2;
-                ball.y = (container.y + container.h)/2;
-                printf("lose 2\n");
-                points1++;
-            }
-            
-            //check ball dont trepass boundaries
-            if(ball.y+ball.h > container.y+container.h) ballvy = -base_v;
-            if(ball.y < container.y) ballvy = base_v; 
-
-            //check paddles dont trepass boundaries
-            if(paddle_p1.y < container.y) paddle_p1.y = container.y; 
-            if(paddle_p1.y+paddle_p1.h > container.y+container.h) paddle_p1.y = container.y+container.h-paddle_p1.h;
-
-            if(paddle_p2.y < container.y) paddle_p2.y = container.y; 
-            if(paddle_p2.y+paddle_p2.h > container.y+container.h) paddle_p2.y = container.y+container.h-paddle_p2.h;
         }
 
         void draw(SDL_Renderer* renderer) const{
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderFillRects(renderer, dividers, n_dividers);
+            points1text.draw();
+            points2text.draw();
             SDL_RenderDrawRect(renderer, &container);
             SDL_RenderFillRect(renderer, &paddle_p1);
             SDL_RenderFillRect(renderer, &paddle_p2);
@@ -266,8 +294,9 @@ namespace Pong
         int padv, pad2v;
         int points1, points2;
         const int container_center_x, container_center_y; 
+        Text points1text,points2text;
 
-        bool ended{false}, paused{true};
+        bool ended{false}, paused{false};
 
     private:
         bool rct_collide(SDL_Rect a, SDL_Rect b){
@@ -317,7 +346,7 @@ struct GameMenuState : State
 {
 public: 
     GameMenuState() : 
-    menu{200, 100, 200, 160, 10}
+    menu{200, 100, 200, 130, 10}
     {
         tag = "Menu";
     }
@@ -334,27 +363,6 @@ public:
     Pong::Menu menu;
 };
 
-struct GamePauseState : State 
-{
-public: 
-    GamePauseState() : 
-    pause_menu{200, 100, 200, 160, 10}
-    {
-        tag = "Pause";
-    }
-
-    std::unique_ptr<State> update() override{
-        return nullptr;
-    }
-    std::unique_ptr<State> handle_input() override;
-    std::unique_ptr<State> draw(SDL_Renderer* renderer) override{
-        pause_menu.draw(renderer);
-        return nullptr;
-    }
-
-    Pong::Menu pause_menu;
-};
-
 struct GamePlayingState : State 
 {
 public: 
@@ -367,11 +375,6 @@ public:
         if(game.ended){
             return std::make_unique<GameMenuState>();
         }
-
-        if(game.paused){
-            return std::make_unique<GamePauseState>();
-        }
-
 
         return nullptr;
     }
@@ -464,12 +467,11 @@ std::unique_ptr<State> Pong::Game::handle_input(){
 std::unique_ptr<State> Pong::Menu::handle_input(){
     const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
     
-    //printf("kb_s_dow: %d,l_s: %d\n", kbstate[SDL_SCANCODE_DOWN],last_state);
-    //printf("kb_s_up: %d,l_s: %d\n", kbstate[SDL_SCANCODE_UP],last_state);
+    int n_buttons = 3;
     if(kbstate[SDL_SCANCODE_DOWN] && !pressed){
-        for(int i = 0; i < 4; i++){
+        for(int i = 0; i < n_buttons; i++){
             if(buttons[i].selected){
-                if(i != 3){
+                if(i != n_buttons-1){
                     buttons[i].selected = false;
                     buttons[i+1].selected = true;
                 } else {
@@ -484,14 +486,14 @@ std::unique_ptr<State> Pong::Menu::handle_input(){
     }
 
     if(kbstate[SDL_SCANCODE_UP] && !pressed){
-        for(int i = 0; i < 4; i++){
+        for(int i = 0; i < n_buttons; i++){
             if(buttons[i].selected){
                 if(i != 0){
                     buttons[i].selected = false;
                     buttons[i-1].selected = true;
                 } else {
                     buttons[i].selected = false;
-                    buttons[3].selected = true;
+                    buttons[n_buttons-1].selected = true;
                 }
                 break;
             }
@@ -512,10 +514,6 @@ std::unique_ptr<State> Pong::Menu::handle_input(){
                     return nullptr;
                 }
                 if(i == 2){
-                    //return std::make_unique<GameHighScoresState>();
-                    return nullptr;
-                }
-                if(i == 3){
                     return std::make_unique<GameExitState>();
                 }
             }
@@ -542,7 +540,7 @@ void Text::load_texture(SDL_Color color){
     	printf("error: %s\n", SDL_GetError());
     }
 
-    SDL_Surface* textSurface = TTF_RenderText_Solid( SDL::Game::font, text.c_str(), color );
+    SDL_Surface* textSurface = TTF_RenderText_Solid( SDL::Game::font, text_str.c_str(), color );
     if(!textSurface) printf("error in surface: %s\n", SDL_GetError());
     
     if(SDL::Game::renderer) texture = SDL_CreateTextureFromSurface( SDL::Game::renderer, textSurface );
@@ -556,6 +554,14 @@ Text(text, x, y, size)
 {
     if(renderer) load_texture(color);
 }
+
+Text::Text(std::string text, int x, int y, int size, SDL_Color color) : 
+Text(text, x, y, size)
+{
+    load_texture(color);
+}
+
+
 
 Pong::MenuButton::MenuButton(std::string text, int x, int y, int w, int h, bool textured) : 
     text_str{text},
