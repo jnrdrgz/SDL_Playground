@@ -1,11 +1,8 @@
 #include <SDL2/SDL.h>
-//#include "../log_system/log_system.h"
 #include "../SDL_Needs/game.h"
 #include "../timer.h"
 #include <vector>
 #include <memory>
-
-//static LogSystem log_system = LogSystem();
 
 const int screen_w = 640;
 const int screen_h = 480;

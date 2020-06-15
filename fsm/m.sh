@@ -1,1 +1,1 @@
-g++ -Wall -Wextra -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer ../timer.h pong_test2.cpp -o game && ./game
+g++ -Wall -Wextra -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer ../timer.h fsm2.cpp -o game && ./game

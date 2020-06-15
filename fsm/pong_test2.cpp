@@ -74,16 +74,14 @@ struct Text
     }
 
     void load_texture(SDL_Color color);
-    void set_text_str(std::string new_str){
-        text_str = new_str;         
-    }
 
     std::string text_str;
     int w,h;
     SDL_Rect rct;
     SDL_Texture* texture = NULL;
-    
 };
+
+
 
 struct State;
 
@@ -157,6 +155,7 @@ namespace Pong
         std::vector<MenuButton> buttons;
         Uint8 last_state = 0;
     };
+
     struct Game
     {
         Game(int x, int y) : 
@@ -174,8 +173,7 @@ namespace Pong
         points1text{"0", container_center_x-((paddle_p1.h/2)+10), container.y, paddle_p1.h/2, {0,0,0,0}},
         points2text{"0", container_center_x+((paddle_p1.h/2)-10), container.y, paddle_p1.h/2, {0,0,0,0}}
         {
-            int diveder_w = paddle_p1.w/2;
-            
+            int diveder_w = paddle_p1.w/2;            
 
             int distance_between_containers = container.h/10;
             int divider_y = container.y;
@@ -445,28 +443,9 @@ struct MainGame
     std::unique_ptr<State> state{std::make_unique<GameMenuState>()};
 };
 
-/*std::unique_ptr<State> Pong::Game::update(){
-    if(!paused){
-        ball.x += 2;
-        ball.y += 2;
-    }
-    return nullptr;
-}
-
-std::unique_ptr<State> Pong::Game::handle_input(){
-    const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
-    if(kbstate[SDL_SCANCODE_P]){
-        printf("Pressing P in Pong::Game::handle_input\n");
-        paused = false;
-    }
-
-    return nullptr;
-}*/
-
-
 std::unique_ptr<State> Pong::Menu::handle_input(){
     const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
-    
+
     int n_buttons = 3;
     if(kbstate[SDL_SCANCODE_DOWN] && !pressed){
         for(int i = 0; i < n_buttons; i++){
@@ -505,21 +484,12 @@ std::unique_ptr<State> Pong::Menu::handle_input(){
     if(kbstate[SDL_SCANCODE_RETURN]){
         for(int i = 0; i < 4; i++){
             if(buttons[i].selected){
-                printf("button %d selected\n", i);
-                if(i == 0){
-                    return std::make_unique<GamePlayingState>();
-                }
-                if(i == 1){
-                    //return std::make_unique<GameOptionsState>();
-                    return nullptr;
-                }
-                if(i == 2){
-                    return std::make_unique<GameExitState>();
-                }
+                if(i == 0) return std::make_unique<GamePlayingState>();//std::make_unique<GamePlayingState>(1);
+                if(i == 1) return nullptr;//std::make_unique<GamePlayingState>(2);
+                if(i == 2) return std::make_unique<GameExitState>();
             }
         }
     }
-
 
     return nullptr;
 }
@@ -561,17 +531,13 @@ Text(text, x, y, size)
     load_texture(color);
 }
 
-
-
 Pong::MenuButton::MenuButton(std::string text, int x, int y, int w, int h, bool textured) : 
     text_str{text},
     rct{x,y,w,h}, 
     selected{false},
     textured{true},
-    text{text, x+5, y+5, h-10, {255,0,0,0}, SDL::Game::renderer}{
-        printf("%d\n", h);
-    }
-
+    text{text, x+5, y+5, h-10, {255,0,0,0}, SDL::Game::renderer}
+{}
 
 int main(int argc, char* args[])
 {
