@@ -209,68 +209,90 @@ namespace Pong
                 paused = false;
             }
         }
-        
+    private:
+        ///////////////////////
+        //Pong Update methods//
+        ///////////////////////
+         
+        void check_balls_dont_trepass_borders(){
+            //check ball dont trepass boundaries
+            if(ball.y+ball.h > container.y+container.h) ballvy = -base_v;
+            if(ball.y < container.y) ballvy = base_v; 
+            if(paddle_p1.y < container.y) paddle_p1.y = container.y; 
+            if(paddle_p1.y+paddle_p1.h > container.y+container.h) paddle_p1.y = container.y+container.h-paddle_p1.h;
+        }
+
+        void check_paddles_dont_trepass_borders(){
+            if(paddle_p2.y < container.y) paddle_p2.y = container.y; 
+            if(paddle_p2.y+paddle_p2.h > container.y+container.h) paddle_p2.y = container.y+container.h-paddle_p2.h;   
+        }
+
+        void check_if_someone_win(){
+            if(ball.x < container.x){
+                ballvx = base_v;
+                ball.x = (container.x + container.w)/2;
+                ball.y = (container.y + container.h)/2;
+                printf("lose 1\n");
+                points2++;
+                std::stringstream _score;
+                _score << points2;
+                points2text.text_str = _score.str();
+                points2text.load_texture({0,0,0,0});
+            }  
+            
+            if(ball.x + ball.w > container.x+container.w){
+                ballvx = -base_v;
+                ball.x = (container.x + container.w)/2;
+                ball.y = (container.y + container.h)/2;
+                printf("lose 2\n");
+                points1++;
+                std::stringstream _score;
+                _score << points1;
+                points1text.text_str = _score.str();
+                points1text.load_texture({0,0,0,0});
+            }
+        }
+
+        void update_enemyAI(){
+            if(ball.x > container.x+(container.w/2) && ballvx > 0){
+                if(ball.y > paddle_p2.y){
+                    paddle_p2.y += pad2v;
+                }
+
+                if(ball.y < paddle_p2.y){
+                    paddle_p2.y -= pad2v;
+                }
+            }
+        }
+
+        void check_ball_pad_collision(){
+            if(rct_collide(paddle_p1,ball)){
+                ballvx = base_v;
+            }
+            if(rct_collide(paddle_p2,ball)){
+                ballvx = -base_v;
+            }
+        }
+
+        void update_ball_vel(){
+            ball.x += ballvx;
+            ball.y += ballvy;
+                
+        }
+
+        void update_player_pad(){
+            paddle_p1.y += padv;
+        }
+    public:
         void update(){
             if(!paused){
-                //vel update
-                ball.x += ballvx;
-                ball.y += ballvy;
-                paddle_p1.y += padv;
-
-                //pad collision
-                if(rct_collide(paddle_p1,ball)){
-                    ballvx = base_v;
-                }
-                if(rct_collide(paddle_p2,ball)){
-                    ballvx = -base_v;
-                }
-
-                //enemy AI
-                if(ball.x > container.x+(container.w/2) && ballvx > 0){
-                    if(ball.y > paddle_p2.y){
-                        paddle_p2.y += pad2v;
-                    }
-
-                    if(ball.y < paddle_p2.y){
-                        paddle_p2.y -= pad2v;
-                    }
-                }
-
-                //check of someone lose
-                if(ball.x < container.x){
-                    ballvx = base_v;
-                    ball.x = (container.x + container.w)/2;
-                    ball.y = (container.y + container.h)/2;
-                    printf("lose 1\n");
-                    points2++;
-                    std::stringstream _score;
-                    _score << points2;
-                    points2text.text_str = _score.str();
-                    points2text.load_texture({0,0,0,0});
-                }  
-                
-                if(ball.x + ball.w > container.x+container.w){
-                    ballvx = -base_v;
-                    ball.x = (container.x + container.w)/2;
-                    ball.y = (container.y + container.h)/2;
-                    printf("lose 2\n");
-                    points1++;
-                    std::stringstream _score;
-                    _score << points1;
-                    points1text.text_str = _score.str();
-                    points1text.load_texture({0,0,0,0});
-                }
-                
-                //check ball dont trepass boundaries
-                if(ball.y+ball.h > container.y+container.h) ballvy = -base_v;
-                if(ball.y < container.y) ballvy = base_v; 
-
-                //check paddles dont trepass boundaries
-                if(paddle_p1.y < container.y) paddle_p1.y = container.y; 
-                if(paddle_p1.y+paddle_p1.h > container.y+container.h) paddle_p1.y = container.y+container.h-paddle_p1.h;
-
-                if(paddle_p2.y < container.y) paddle_p2.y = container.y; 
-                if(paddle_p2.y+paddle_p2.h > container.y+container.h) paddle_p2.y = container.y+container.h-paddle_p2.h;
+                update_ball_vel();
+                update_player_pad();
+                check_ball_pad_collision();
+                update_enemyAI();
+                check_if_someone_win();                
+                check_balls_dont_trepass_borders();
+                check_paddles_dont_trepass_borders();               
             }
         }
 

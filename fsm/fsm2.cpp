@@ -5,6 +5,7 @@
 
 const int screen_w = 640;
 const int screen_h = 480;
+bool pressed = false;
 
 namespace SDL{
 	struct Context
@@ -50,8 +51,8 @@ SDL_Event SDL::Context::event;
 struct State
 {
 public: 
-    virtual void update() = 0;
-    virtual void handle_input() = 0;
+    virtual std::unique_ptr<State> update() = 0;
+    virtual std::unique_ptr<State> handle_input() = 0;
     virtual void draw(SDL_Renderer* renderer) = 0;
     std::string tag;
 };
@@ -62,8 +63,8 @@ public:
 	MenuState(){
 		tag = "Menu";
 	}
-    void update() override{}
-    void handle_input() override;
+    std::unique_ptr<State> update() override;
+    std::unique_ptr<State> handle_input() override;
     void draw(SDL_Renderer* renderer) override{}
 };
 
@@ -73,15 +74,13 @@ public:
 	PlayingState(){
 		tag = "Playing";
 	} 
-    void update() override{}
-    void handle_input() override{
-    	const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
-        if(kbstate[SDL_SCANCODE_E]){
-            printf("Pressing e in playing\n");
-        }
-    }
+    std::unique_ptr<State> update() override;
+    std::unique_ptr<State> handle_input() override;
+
     void draw(SDL_Renderer* renderer) override{}
 };
+
+
 
 namespace Jumper
 {
@@ -89,32 +88,65 @@ namespace Jumper
 	{
 		Game() : 
 		running{true},
-		menuState{std::make_unique<MenuState>()},
-		playingState{std::make_unique<PlayingState>()},
-		currentState{nullptr}
+		currentState{std::make_unique<MenuState>()}
 		{}
 
-		void update(){}
+		void update(){
+			auto n_state = currentState->update();
+	        if(n_state){
+	            currentState = std::move(n_state);
+	        }
+		}
 		void handle_input(){
-			currentState->handle_input();
+			auto n_state = currentState->handle_input();
+	        if(n_state){
+	            currentState = std::move(n_state);
+	        }
 		}
 		void draw(){}
 
 		bool running;
 
-		std::unique_ptr<MenuState> menuState;
-		std::unique_ptr<PlayingState> playingState;
 		std::unique_ptr<State> currentState;
 	};
 }
 
-void MenuState::handle_input(){
+//MENU METHODS
+std::unique_ptr<State> MenuState::handle_input(){
 	const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
     if(kbstate[SDL_SCANCODE_E]){
         printf("Pressing e in menu\n");
     }
+    if(kbstate[SDL_SCANCODE_M] && !pressed){
+        printf("state changed to playing\n");
+        pressed = true;
+        return std::make_unique<PlayingState>();
+    }
 
+    return nullptr;
 }
+std::unique_ptr<State> MenuState::update(){
+    return nullptr;
+}
+
+//PLAYING METHODS
+std::unique_ptr<State> PlayingState::handle_input(){
+	const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
+    if(kbstate[SDL_SCANCODE_E]){
+        printf("Pressing e in playing\n");
+    }
+    if(kbstate[SDL_SCANCODE_M] && !pressed){
+        printf("state changed to menu\n");
+        pressed = true;
+        return std::make_unique<MenuState>();
+    }
+
+    return nullptr;
+}
+std::unique_ptr<State> PlayingState::update(){
+    return nullptr;
+}
+
 
 int main(int argc, char* args[])
 {
@@ -149,11 +181,12 @@ int main(int argc, char* args[])
                 }
             }
             if(SDL::Context::event.type == SDL_KEYUP){
-                switch(SDL::Context::event.key.keysym.sym){
-                    //case SDLK_UP:
-                    //case SDLK_DOWN:
-                    //    pressed = false;
-                }
+            	pressed = false;
+                //switch(SDL::Context::event.key.keysym.sym){
+                //    case SDLK_UP:
+                //    case SDLK_DOWN:
+                //        pressed = false;
+                //}
             }
         }
 
