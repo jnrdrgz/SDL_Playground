@@ -53,37 +53,93 @@ struct State
 public: 
     virtual std::unique_ptr<State> update() = 0;
     virtual std::unique_ptr<State> handle_input() = 0;
-    virtual void draw(SDL_Renderer* renderer) = 0;
+    virtual void draw() = 0;
     std::string tag;
 };
-
-struct MenuState : State
-{
-public: 
-	MenuState(){
-		tag = "Menu";
-	}
-    std::unique_ptr<State> update() override;
-    std::unique_ptr<State> handle_input() override;
-    void draw(SDL_Renderer* renderer) override{}
-};
-
-struct PlayingState : State
-{
-public: 
-	PlayingState(){
-		tag = "Playing";
-	} 
-    std::unique_ptr<State> update() override;
-    std::unique_ptr<State> handle_input() override;
-
-    void draw(SDL_Renderer* renderer) override{}
-};
-
 
 
 namespace Jumper
 {
+	struct MenuState : State
+	{
+	public: 
+		MenuState(){
+			tag = "Menu";
+		}
+	    std::unique_ptr<State> update() override;
+	    std::unique_ptr<State> handle_input() override;
+	    void draw() override{}
+	};
+
+	//player states
+							//should create a entity sate instead?
+							//how to update rct if not?
+	struct PlayerStandingState : State
+	{
+	public: 
+		PlayerStandingState(){
+			tag = "PlayerStanding";
+		} 
+	    std::unique_ptr<State> update() override;
+	    std::unique_ptr<State> handle_input() override;
+
+	    void draw() override{}
+	};
+	struct PlayerJumpingState : State
+	{
+	public: 
+		PlayerJumpingState(){
+			tag = "PlayerJumping";
+		} 
+	    std::unique_ptr<State> update() override;
+	    std::unique_ptr<State> handle_input() override;
+
+	    void draw() override{}
+	};
+	struct PlayerWalkingState : State
+	{
+	public: 
+		PlayerWalkingState(){
+			tag = "PlayerWalking";
+		} 
+	    std::unique_ptr<State> update() override;
+	    std::unique_ptr<State> handle_input() override;
+
+	    void draw() override{}
+	};
+
+	struct Player
+	{
+	public: 
+	    Player(int x, int y, int w, int h) :
+	    rct{x,y,w,h}{}
+
+	    void update();
+	    void handle_input();
+	    void draw();
+
+		std::unique_ptr<State> state;
+		SDL_Rect rct;
+	};
+
+	//playing
+	struct PlayingState : State
+	{
+	public: 
+		PlayingState() : 
+		player{0,0,16,16}
+		{
+			tag = "Playing";
+		} 
+
+	    std::unique_ptr<State> update() override;
+	    std::unique_ptr<State> handle_input() override;
+
+	    void draw() override;
+
+	    Player player;
+	};
+	
 	struct Game
 	{
 		Game() : 
@@ -111,8 +167,10 @@ namespace Jumper
 	};
 }
 
-//MENU METHODS
-std::unique_ptr<State> MenuState::handle_input(){
+////////////////
+//MENU METHODS//
+////////////////
+std::unique_ptr<State> Jumper::MenuState::handle_input(){
 	const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
     if(kbstate[SDL_SCANCODE_E]){
         printf("Pressing e in menu\n");
@@ -125,12 +183,17 @@ std::unique_ptr<State> MenuState::handle_input(){
 
     return nullptr;
 }
-std::unique_ptr<State> MenuState::update(){
+std::unique_ptr<State> Jumper::MenuState::update(){
     return nullptr;
 }
 
-//PLAYING METHODS
-std::unique_ptr<State> PlayingState::handle_input(){
+/////////////////////////
+//PLAYING STATE METHODS//
+////////////////////////
+std::unique_ptr<State> Jumper::PlayingState::handle_input(){
+	//Entities
+	player.handle_input();
+	//Extra
 	const Uint8 *kbstate = SDL_GetKeyboardState(NULL);
     if(kbstate[SDL_SCANCODE_E]){
         printf("Pressing e in playing\n");
@@ -143,8 +206,14 @@ std::unique_ptr<State> PlayingState::handle_input(){
 
     return nullptr;
 }
-std::unique_ptr<State> PlayingState::update(){
+
+std::unique_ptr<State> Jumper::PlayingState::update(){
+    player.update();
     return nullptr;
+}
+
+void Jumper::PlayingState::draw(){
+    player.draw();
 }
 
 

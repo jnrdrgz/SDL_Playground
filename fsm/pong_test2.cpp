@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include<sstream>
+#include <sstream>
 
 const int screen_w = 640;
 const int screen_h = 480;
@@ -606,6 +606,7 @@ int main(int argc, char* args[])
         mainGame.draw(game.renderer);
     
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
+        
         SDL_RenderPresent(game.renderer);
     }
 
