@@ -39,11 +39,18 @@ Collision rct_collide_c(SDL_Rect a, SDL_Rect b){
         a.y + a.h > b.y)
     {
         //if(a.y+a.h < b.y+b.h-3) return Collision::UP;
-        if(a.y+a.h - 5 < b.y+5) return Collision::UP; 
-        if(a.y > b.y) return Collision::DOWN; 
+        if(a.y+a.h - 2 < b.y + 2) {
+            printf("up: ayw: %d, by: %d\n", a.y+a.h - 2, b.y + 2);
+            
+            return Collision::UP;
+
+
+        }
+        //if(a.y > b.y) 
+        printf("down ayw: %d, by: %d\n", a.y+a.h,b.y);
+        return Collision::DOWN; 
         
-        printf("ayw: %d, by: %d\n", a.y+a.w,b.y);
-        return Collision::DOWN;
+        
     }
 
     return Collision::NONE;
@@ -254,7 +261,7 @@ int main(int argc, char* args[])
     game.init("Plat", screenw, screenh);
     log_system.init();
 
-    Vector2 gravity = Vector2(0.0f,0.05f);
+    Vector2 gravity = Vector2(0.0f,0.09f);
     Vector2 wind = Vector2(0.0f,0.0f);
     World world(gravity, wind);
 
@@ -287,7 +294,7 @@ int main(int argc, char* args[])
                     //world.bodies[0].apply_force(Vector2(0.5f, 0.0f));
                     if(body_test.velocity.x < 0) body_test.velocity.x = 0.0f;
                     body_test.apply_force(Vector2(body_test.max_vel.x, 0.0f));
-                    printf("acc: %.2f, vel: %.2f\n", body_test.acceleration.x,body_test.velocity.x);
+                    //printf("acc: %.2f, vel: %.2f\n", body_test.acceleration.x,body_test.velocity.x);
             
                 }
                 if(game.event.key.keysym.sym == SDLK_LEFT){
@@ -295,7 +302,7 @@ int main(int argc, char* args[])
                     //world.bodies[0].apply_force(Vector2(-0.5f, 0.0f));
                     if(body_test.velocity.x > 0) body_test.velocity.x = 0.0f;
                     body_test.apply_force(Vector2(-body_test.max_vel.x, 0.0f));
-                    printf("acc: %.2f, vel: %.2f\n", body_test.acceleration.x,body_test.velocity.x);
+                    //printf("acc: %.2f, vel: %.2f\n", body_test.acceleration.x,body_test.velocity.x);
                 }
                 
                 if(game.event.key.keysym.sym == SDLK_s){

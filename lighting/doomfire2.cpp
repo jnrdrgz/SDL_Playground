@@ -8,31 +8,8 @@ const int testW = 500;
 const int testH = 500;
 int firePixels[36] = {0};
 
-int distance(int target, int guess){
-    if(target <= guess){
-        return guess-target;
-    } else {
-        return target-guess;
-    }
-}
-
-int get_value(int target, int guess, int maxv){
-    return distance(target, guess)/(target/maxv);  
-}
-
-int distance_from_center(int x, int y, int w, int h){
-    int x_dis = distance(w/2, x);
-    int y_dis = distance(h/2, y);
-
-    int p = (x_dis+y_dis)/2;
-    
-    return get_value(w/2, p, 250);
-
-}
-
 void spreadFire(int src){
-    int r = 
-    firePixels[src-testW] = firePixels[src]-1;
+    int r = firePixels[src-testW] = firePixels[src]-1;
 }
 
 void doFire(){
@@ -48,38 +25,13 @@ int main(int argc, char* args[])
     Game game;
 
     game.init("test", testW, testH);
-
+    
     SDL_Rect rct = {100,100,50,50};
     SDL_Texture* test = nullptr;
 
     test = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, testW, testH);
-
-    // range of colors 0x4B(75) -> 0XFF(255)
-    int r = 0xff;
-    int g = 0xff;
-    int b = 0x4B;
-    int rgb = b+(g<<8)+(r<<16);
-    
-    int quantity_of_colors = 255-75;
-    int light_jump = (testW*testH)/quantity_of_colors;
-    //printf("%d\n", rgb);
     
     Uint32 pixels[testW*testH] = {};
-    //Uint32 f = SDL_MapRGB();
-    Uint32 f = 0xFFFF00;
-
-    for (int i = 0; i < testH; i++)
-    {
-        for (int j = 0; j < testW; j++)
-        {
-            int index = i+j*testW;
-            //r = j;
-            //g = 0;
-            b = distance_from_center(j,i,testW,testH);
-            rgb = b+(g<<8)+(r<<16);
-            pixels[index] = rgb;
-        }
-    }
 
     int rgbs[] = {
         0x07,0x07,0x07,
@@ -120,46 +72,6 @@ int main(int argc, char* args[])
         0xEF,0xEF,0xC7,
         0xFF,0xFF,0xFF
     };
-
-    // Populate pallete.
-    for(size_t i = 0; i < (sizeof(rgbs)/sizeof(int))/3; i++) {
-        int r = rgbs[i * 3 + 0];
-        int g = rgbs[i * 3 + 1];
-        int b = rgbs[i * 3 + 2];
-        int rgb = b+(g<<8)+(r<<16);
-        firePixels[i] = rgb; 
-    }
-
-    /*for(int i = 0; i < 36; i++){  
-        pallete[i] = rgb;
-        printf("%d,%d,%d\n", r,g,b);
-        if(r+25 <= 255){
-            r += 25;
-        } else {
-            r = 25;
-        }
-
-        if(g+25 <= 255) {
-            g += 25;
-        } else {
-            g = 25;
-        }
-    }*/
-
-    int g_ = 0;
-    for (int i = 0; i < testH; i++)
-    {
-        for (int j = 0; j < testW; j++)
-        {
-            //int index = i+j*testW;
-            //printf("%d\n", pixels[index]);
-            pixels[j] = firePixels[g_];
-        }
-        g_+=1;
-        if(g_ == 35){
-            g_ = 0;
-        }
-    }
         
     while(game.running){
         
@@ -176,24 +88,9 @@ int main(int argc, char* args[])
                 
             }
         }
-
         
-        /*
-        int r = 0xff;
-        int g = 0xff;
-        int b = 0x01;
-        int rgb = 0;
-        rgb = (((r << 8) | g) << 8) | b;
-        */
-
-        
-
         SDL_UpdateTexture(test, nullptr, pixels, 4*testW);
         SDL_RenderCopy(game.renderer, test, nullptr, nullptr);
-
-        //SDL_SetRenderDrawColor( game.renderer, 0, 0, 0, 255);        
-        //SDL_RenderDrawRect(game.renderer, &rct);
-
     
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);

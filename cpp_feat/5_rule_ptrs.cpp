@@ -2,6 +2,7 @@
 #include <memory>
 
 
+
 struct State
 {
 	int number;

@@ -289,7 +289,7 @@ public:
 
     void update(){
         ///VIEW THIS !!!!
-        if(!steady){
+        if(!steady){ //&& !attacking -> ¿solve?
         //VIEW THIS !!! WALK/ATTTAK ERROR
             animations["walking"].update();
         }

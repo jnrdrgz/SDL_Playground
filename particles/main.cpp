@@ -86,11 +86,38 @@ public:
     int step = 16*6;
 };
 
+enum class Splatter
+{
+    DECAP,
+    ALLOVER,
+    RIGHT,
+    LEFT,
+};
 
 struct Partic
 {
 public:
-    Partic(int ipx, int ipy){
+    Partic(int ipx, int ipy, Splatter spl_type, int floor){
+        splatter_type = spl_type;
+        switch(spl_type){
+            case Splatter::DECAP:
+                set_decap(ipx, ipy);
+                break;
+            case Splatter::ALLOVER:
+                set_allover(ipx, ipy);
+                break;
+            case Splatter::RIGHT:
+                set_right(ipx, ipy);
+                break;
+            case Splatter::LEFT:
+                set_left(ipx, ipy);
+                break;
+        }
+
+        this->floor = floor;
+    }
+
+    void set_decap(int ipx, int ipy){
         int wh = random_b(1, 4);
         rct.x = ipx;
         rct.y = ipy;
@@ -102,16 +129,72 @@ public:
         wind = Vector2(random_fb(-0.01f,0.01f),0.0f);
         vel = Vector2(0.0f,0.0f);
     }
+    void set_allover(int ipx, int ipy){
+        int wh = random_b(1, 4);
+        rct.x = ipx;
+        rct.y = ipy;
+        rct.w = wh;
+        rct.h = wh;
+        angle = rand_angle();  
+        gravity = Vector2(0.0f,0.11f);
+        acc = Vector2(random_fb(-0.7f,0.7f),random_fb(-0.7f,0.7f));
+        wind = Vector2(random_fb(-0.04f,0.04f),0.0f);
+        vel = Vector2(0.0f,0.0f);
+    }
+    void set_right(int ipx, int ipy){
+        int wh = random_b(1, 4);
+        rct.x = ipx;
+        rct.y = ipy;
+        rct.w = wh;
+        rct.h = wh;
+        angle = rand_angle();  
+        gravity = Vector2(0.0f,0.13f);
+        acc = Vector2(0.0f,random_fb(-2.0f,-1.0f));
+        wind = Vector2(random_fb(-0.01f,0.01f),0.0f);
+        vel = Vector2(0.0f,0.0f);
+    }
+    void set_left(int ipx, int ipy){
+        int wh = random_b(1, 4);
+        rct.x = ipx;
+        rct.y = ipy;
+        rct.w = wh;
+        rct.h = wh;
+        angle = rand_angle();  
+        gravity = Vector2(0.0f,0.13f);
+        acc = Vector2(random_fb(-0.7f,-0.2f),random_fb(-0.7f,-0.2f));
+        wind = Vector2(random_fb(-0.04f,0.04f),0.0f);
+        vel = Vector2(0.0f,0.0f);
+    }
+
+    void set_gravity(Vector2 ngv){
+        gravity = ngv;
+    }
+
+    void set_vel(Vector2 nv){
+        vel = nv;
+    }
+
+    void set_acc(Vector2 na){
+        acc = na;
+    }
 
     void update(){
         //rct.x += (cos(angle)*5.0f);
         //rct.y -= (sin(angle)*5.0f);
+        if(gravity.y < 0){
+            acc += gravity;
+            vel += acc;
+            rct.x += vel.x;
+            rct.y += vel.y;
+        }
         if(rct.y <= floor){
             acc += gravity;
             acc += wind;
             vel += acc;
             rct.x += vel.x;
             rct.y += vel.y;
+        } else {
+            active = false;
         }
         
     }
@@ -126,6 +209,8 @@ private:
     Vector2 vel, acc, gravity, wind;
     float mass;
     int floor = 250;
+    bool active = true;
+    Splatter splatter_type; 
 };
 
 struct Emitter
@@ -135,23 +220,28 @@ public:
         //timer.start();
         x = 250;
         y = 250;
-        life_time = 4000;
+        life_time = 500;
     }
 
-    void emit(){
+    void emit(int floor){
         if(life_time >= accum){
             if(timer.getTicks() >= frequency){
-                if(partics.size() < max_particles){
-                    partics.push_back(Partic{x,y});
-                } else {
-                    partics.erase(partics.begin());
-                }
+                //if(partics.size() < max_particles){
+                    
+                //} 
+                //else {
+                //    partics.erase(partics.begin());
+                //}
 
+                if(/*splate type == allover*/ true){
+                    for(int i = 0; i < 30; i++)
+                        partics.push_back(Partic{x,y,Splatter::ALLOVER, floor});
+                }
                 accum += timer.getTicks();
                 timer.stop();
                 timer.start();
             }
-        }
+        } 
 
     }
 
@@ -166,7 +256,24 @@ public:
                 //max_particles--;
             } 
         }*/
+        const Uint8* kstate  = SDL_GetKeyboardState(NULL);
+        if(kstate[SDL_SCANCODE_G]){
+            printf("g\n");
+            for(auto& p : partics){
+                p.set_acc(Vector2(0.0f,0.0f));
+                p.set_vel(Vector2(0.0f,0.0f));
+                p.set_gravity(Vector2(0.0f,-0.02f));
 
+            }
+        }
+        if(kstate[SDL_SCANCODE_H]){
+            for(auto& p : partics){
+                p.set_acc(Vector2(0.0f,0.0f));
+                p.set_vel(Vector2(0.0f,0.0f));
+                p.set_gravity(Vector2(0.0f,0.03f));
+
+            }
+        }
         if(event.type == SDL_MOUSEBUTTONDOWN){
             if(event.button.button == SDL_BUTTON_LEFT){
                 printf("rileft\n");
@@ -185,7 +292,6 @@ public:
         for(auto& p : partics){
             p.update();
             p.draw(renderer);
-            particles++;
         }
 
     }
@@ -290,7 +396,7 @@ int main(int argc, char* args[])
             satelite.y += (sin(angle)*5.0f);
         }
 
-        emitter.emit();
+        emitter.emit(250);
         emitter.draw(game.renderer);
 
         //SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255); 

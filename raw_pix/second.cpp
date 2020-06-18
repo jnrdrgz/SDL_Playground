@@ -7,7 +7,7 @@
 const int screen_w = 640;
 const int screen_h = 360;
 
-const Uint32 doomfire[] = {0x070707,0x1f0707,0x2f0f07,0x470f07,0x571707,0x671f07, 0x771f07, 0x8f2707, 0x9f2f07, 0xaf3f07, 0xbf4707,0xc74707,0xDF4F07,0xDF5707,0xDF5707,0xD75F07,0xD7670F,0xcf6f0f,0xcf770f,0xcf7f0f,0xCF8717,0xC78717,0xC78F17, 0xC7971F, 0xBF9F1F, 0xBF9F1F, 0xBFA727, 0xBFA727, 0xBFAF2F, 0xB7AF2F, 0xB7B72F, 0xB7B737, 0xCFCF6F, 0xDFDF9F, 0xEFEFC7, 0xFFFFFF};
+const Uint32 doomfire[] = {0x070707,0x1f0707,0x2f0f07,0x470f07,0x571707,0x671f07,0x771f07, 0x8f2707,0x9f2f07,0xaf3f07, 0xbf4707,0xc74707,0xDF4F07,0xDF5707,0xDF5707,0xD75F07,0xD7670F,0xcf6f0f,0xcf770f,0xcf7f0f,0xCF8717,0xC78717,0xC78F17, 0xC7971F, 0xBF9F1F, 0xBF9F1F, 0xBFA727, 0xBFA727, 0xBFAF2F, 0xB7AF2F, 0xB7B72F, 0xB7B737, 0xCFCF6F, 0xDFDF9F, 0xEFEFC7, 0xFFFFFF};
 
 Uint32 random_between(Uint32 mn, Uint32 mx){
     Uint32 n = rand()%(mx-mn)+mn;
@@ -111,6 +111,28 @@ void paint_frow(Uint32* pix){
     }
 }
 
+void spreadFire(Uint32* firePixels, int src){
+    Uint32 rand = ((Uint32)random())%3;
+    Uint32 dst = src - rand + 1;
+    //printf("dst: %d\n", dst);
+    //printf("rand: %d\n", rand);
+
+    int t = firePixels[src] - (rand & 1);
+    if(t < 0) t = 0;
+    //printf("t: %d\n", t);
+    if(dst < screen_w) dst = screen_w;  
+    firePixels[dst - screen_w] = t;
+}
+
+void doFire(Uint32* firePixels){
+    for(int x = 0 ; x < screen_w; x++) {
+        for (int y = 1; y < screen_h; y++) {
+             spreadFire(firePixels, y * screen_w + x);
+        }
+    }
+} 
+
+
 int main(int argc, char* args[])
 {
     Game game;
@@ -122,28 +144,28 @@ int main(int argc, char* args[])
 
     frame_buffer = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, screen_w, screen_h);
 
-    // range of colors 0x4B(75) -> 0XFF(255)
-    int r = 0xff;
-    int g = 0xff;
-    int b = 0x4B;
-    int rgb = b+(g<<8)+(r<<16);
-    
-    int quantity_of_colors = 255-75;
-    
     Uint32 pixels[screen_w*screen_h] = {};
-    //Uint32 f = SDL_MapRGB();
-    Uint32 f = 0xFFFF00;
+    Uint32 pixels_values[screen_w*screen_h] = {};
 
-    Uint32* screen_fpx = pixels; 
 
-    for (int i = 0; i < screen_w*screen_h; ++i)
-    {
-        Uint32 r = 0xFF0000;
-        pixels[i] = r;        
+    for(int i = 0; i < screen_w; i++){
+        pixels_values[((screen_h-1)*screen_w)+i] = 35;    
     }
 
-    int top_row = 0;
-    int bottom_row = screen_h-1;
+    auto update_scr = [](Uint32* pixels, Uint32* pixels_values){
+        for(int i = 0; i < screen_w*screen_h; i++){
+          //printf("%d\n", pixels_values[i]);
+          //printf("llegamos:\n");
+          pixels[i] = doomfire[pixels_values[i]];
+        }
+    };
+
+    update_scr(pixels,pixels_values);
+
+    
+
+    Uint32* screen_pointer = pixels; 
+
     while(game.running){
         
         SDL_RenderClear(game.renderer);
@@ -154,49 +176,20 @@ int main(int argc, char* args[])
         }
 
         if(kbstate[SDL_SCANCODE_T]){
-            Uint32 col = 0x00FF00;
-            *screen_fpx = col;
-            screen_fpx++;
+            doFire(pixels_values);
+            update_scr(pixels,pixels_values);
         }
 
-        if(kbstate[SDL_SCANCODE_U]){
-            paint_row(pixels, top_row, 255,get_value(255, top_row, 255),0);
+        if(kbstate[SDL_SCANCODE_U]){}
 
-            printf("%d\n", get_value(255, top_row, 255));
+        if(kbstate[SDL_SCANCODE_J]){}
 
-            top_row++;
-        }
+        if(kbstate[SDL_SCANCODE_I]){}
 
-        if(kbstate[SDL_SCANCODE_J]){
-            paint_row(pixels, bottom_row, 255,255,0);
-            bottom_row--;
-        }
-
-        if(kbstate[SDL_SCANCODE_I]){
-            Uint32 val = get_value(screen_h/2, bottom_row, 35);
-            Uint32 col = doomfire[val];
-            if(val > 3){
-                col = doomfire[random_between(val-3, val)];
-            }
-            paint_row_uint32(pixels, bottom_row, col);
-            printf("%d\n", get_value(screen_h, bottom_row, 35));
-
-            bottom_row--;
-        }
-
-        if(kbstate[SDL_SCANCODE_O]){
-            Uint32 val = get_value(screen_h/2, bottom_row, 35);
-            
-            paint_row_doomfire_random(pixels, bottom_row, val);
-            printf("%d\n", get_value(screen_h, bottom_row, 35));
-
-            bottom_row--;
-        }
+        if(kbstate[SDL_SCANCODE_O]){}
 
 
-        if(kbstate[SDL_SCANCODE_H]){
-            paint_frow(pixels);
-        }
+        if(kbstate[SDL_SCANCODE_H]){}
         
         while(SDL_PollEvent(&game.event)){
             if(game.event.type == SDL_QUIT){
@@ -210,15 +203,17 @@ int main(int argc, char* args[])
             }
         }
         
+        doFire(pixels_values);
+        update_scr(pixels,pixels_values);
+
 
         SDL_UpdateTexture(frame_buffer, nullptr, pixels, 4*screen_w);
         SDL_RenderCopy(game.renderer, frame_buffer, nullptr, nullptr);
 
-    
         SDL_SetRenderDrawColor( game.renderer, 255, 255, 255, 255);
         SDL_RenderPresent(game.renderer);
 
-       
+        //SDL_Delay(1000);
     }
     
     SDL_DestroyTexture(frame_buffer);

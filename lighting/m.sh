@@ -1,1 +1,1 @@
-g++ -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer ../SDL_Needs/game.* ../log_system/*.cpp ../timer.h ../log_system/*.h doomfire.cpp -o game && ./game
+g++ -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer ../SDL_Needs/game.* ../timer.h doomfire2.cpp -o game && ./game

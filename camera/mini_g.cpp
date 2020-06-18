@@ -132,7 +132,7 @@ public:
 };
 
 void Camera::follow(GameObject g){
-    if(g.rct.x-x > screen_w-g.rct.w){
+    if(g.rct.x-x > (screen_w/zoom)-g.rct.w){
         x += g.vx;
         if(x > limitx-screen_w) x = limitx-screen_w;
     }
@@ -140,7 +140,7 @@ void Camera::follow(GameObject g){
         x -= g.vx;
         if(x < 0) x = 0;
     }
-    if(g.rct.y-y > screen_h-g.rct.h){
+    if(g.rct.y-y > (screen_h/zoom)-g.rct.h){
         y += g.vy;
         if(y > limity-screen_h) y = limity-screen_h;
     }

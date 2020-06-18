@@ -8,6 +8,7 @@
 class Text
 {
 public:
+    //NO CUMPLE REGLA DE 5
     Text(){}
     Text(std::string text, SDL_Color color, SDL_Renderer* renderer, TTF_Font* font);
     ~Text();

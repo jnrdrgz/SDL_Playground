@@ -9,7 +9,7 @@ void LogSystem::init(){
 	if(!font){
 		printf("fatal error creating log system: font not loaded correctly: %s\n", TTF_GetError());
 	}
-	color = {255,50,50};
+	color = {255,50,50,255};
 	inited = true;
 }
 

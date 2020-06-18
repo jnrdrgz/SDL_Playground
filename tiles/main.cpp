@@ -21,14 +21,20 @@ struct Tile
 public:
     Tile(){
         set_index(1);
+        rotation = 0;
+        flip = SDL_FLIP_NONE;
     }
 
     Tile(int index){
         set_index(index);
+        rotation = 0;
+        flip = SDL_FLIP_NONE;
     }
 
     void set_index(int index){
         this->index = index;
+        rotation = 0;
+        flip = SDL_FLIP_NONE;
         update_tile_img();
     }
 
@@ -62,7 +68,8 @@ public:
 
     int index;
     SDL_Rect src,dst;
-
+    int rotation;
+    SDL_RendererFlip flip;
 };
 
 struct TileMap
@@ -109,10 +116,46 @@ public:
 
                     selection = false;
                     editing = true;
+                    clicked = true;
                 }
-                else if(editing){    
+                else if(editing){
+                    int aux = tiles[tile_x][tile_y].index;
                     tiles[tile_x][tile_y].set_index(select_tile_index);
+                    printf("tile setted to: %d\n", select_tile_index);
+                    if(aux != tiles[tile_x][tile_y].index){
+                        last_tile_value[0] = tile_x;
+                        last_tile_value[1] = tile_y;
+                        last_tile_value[2] = aux;
+                        printf("last_tile_value: %d\n", last_tile_value[2]);
+                    }
                 }               
+            }
+
+            if(state[SDL_SCANCODE_Z] & state[SDL_SCANCODE_LCTRL]){
+                if(editing){
+                    int x = last_tile_value[0];
+                    int y = last_tile_value[1];
+                    tiles[x][y].set_index(last_tile_value[2]);
+                    printf("x: %d, y: %d, i: %d\n", last_tile_value[0],last_tile_value[1],last_tile_value[2]);
+                    printf("undoing\n");
+                }
+            }
+        
+            if (SDL_GetMouseState(&x, &y) & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
+                if(!clicked){
+                    int tile_x = x/tile_size;
+                    int tile_y = y/tile_size;
+                
+                    if(editing){    
+                        tiles[tile_x][tile_y].rotation += 90;
+                    }
+                    
+                    clicked = true;
+                }
+
+            }
+            if(!SDL_GetMouseState(&x, &y)){
+                clicked = false;
             }
 
 
@@ -137,7 +180,10 @@ public:
         } else {
             for(int i = 0; i < horizontal_tiles; i++){
                 for(int j = 0; j < vertical_tiles; j++){
-                    SDL_RenderCopy(renderer, tilesheet_texture, &tiles[i][j].src, &tiles[i][j].dst);
+                    //SDL_RenderCopy(renderer, tilesheet_texture, &tiles[i][j].src, &tiles[i][j].dst);
+                    //SDL_RenderCopy(renderer, tilesheet_texture, &tiles[i][j].src, &tiles[i][j].dst);
+                    SDL_RenderCopyEx(renderer, tilesheet_texture, &tiles[i][j].src, &tiles[i][j].dst, 
+                        tiles[i][j].rotation, 0, tiles[i][j].flip);
                 }
             }
         }
@@ -148,6 +194,10 @@ public:
     bool edit_mode = false, selection = false, editing = false;
     int select_tile_index = 0;
     SDL_Rect edit_rct = {0,0,texture_width,texture_height};
+
+                        //x,y,index
+    int last_tile_value[3] = {0};
+    bool clicked = true;
 
 };
 

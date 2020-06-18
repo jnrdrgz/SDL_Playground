@@ -1,0 +1,10 @@
+APP := game
+CCFLAGS := -Wall -pedantinc
+CC := g++
+MKDIR := mkdir -p
+
+$(APP) : src/main.cpp
+	$(CC) src/main.cpp -c -o obj/main.o $(CCFLAGS)
+
+obj :
+	$(MKDIR) obj

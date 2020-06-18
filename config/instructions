@@ -1,0 +1,14 @@
+datatype_configname: value
+
+datatypes available:
+i_ int
+f_ float
+s_ string
+
+examples:
+s_mapname: awesomemap
+i_mapsize: 30
+f_gravity: 3.3
+
+file parses with \n
+

@@ -1,0 +1,9 @@
+i_pad_size: 10
+i_pad_velocity: 10
+i_ball_size: 10
+f_ball_velocity: 10.0
+i_time: 220
+s_blocks: 111010101100011
+s_blocks_file: file_name
+i_block_quantity: 20
+

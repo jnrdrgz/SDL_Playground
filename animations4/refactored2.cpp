@@ -191,13 +191,12 @@ struct State
 {
 public:
 	virtual ~State() = default;
-    virtual State* handle_sinput(Entity* entity, SDL_Event event) = 0;
-    virtual State* handle_minput(Entity* entity, const Uint8* key_state) = 0;
-    virtual State* update(Entity* entity) = 0;
-    virtual void draw(Entity* entity, SDL_Renderer* renderer) = 0;
+    virtual State* handle_sinput(Entity& entity, SDL_Event event) = 0;
+    virtual State* handle_minput(Entity& entity, const Uint8* key_state) = 0;
+    virtual State* update(Entity& entity) = 0;
+    virtual void draw(Entity& entity, SDL_Renderer* renderer) = 0;
 private:
     Animation animation;
-
 };
 
 struct Entity
@@ -209,10 +208,14 @@ public:
     virtual void handle_sinput(SDL_Event event) = 0;
     virtual void handle_minput(const Uint8* key_state) = 0;
 
+    bool animation_finished(){
+        return animation.finished;
+    }
+
+    SDL_Rect rct;
 protected:
     State* state = nullptr;
     Animation animation;
-    SDL_Rect rct;
     //std::vector<State*> states;
 };
 
@@ -231,7 +234,7 @@ public:
 	}
 
 	void update() override{
-		State* new_state = state->update(this);
+		State* new_state = state->update(*this);
     	if(new_state != nullptr){
     		delete state;
     		state = new_state;
@@ -241,19 +244,21 @@ public:
     	//animation.draw(renderer, &rct);
     }
     void handle_sinput(SDL_Event event) override{
-    	State* new_state = state->handle_sinput(this, event);
+    	State* new_state = state->handle_sinput(*this, event);
     	if(new_state != nullptr){
     		delete state;
     		state = new_state;
     	}
     }
+    
     void handle_minput(const Uint8* key_state) override{
-    	State* new_state = state->handle_minput(this, key_state);
+    	State* new_state = state->handle_minput(*this, key_state);
     	if(new_state != nullptr){
     		delete state;
     		state = new_state;
     	}
     }	
+
 };
 
 /*struct PlayerState : State
@@ -268,25 +273,60 @@ public:
 struct SteadyPlayerState : State
 {
 public:
-    State* handle_sinput(Entity* entity, SDL_Event event) override;
+    State* handle_sinput(Entity& entity, SDL_Event event) override;
 
-    State* handle_minput(Entity* entity, const Uint8* key_state) override;
+    State* handle_minput(Entity& entity, const Uint8* key_state) override;
 
-    State* update(Entity* entity) override;
+    State* update(Entity& entity) override;
 
-    void draw(Entity* entity, SDL_Renderer* renderer) override;
+    void draw(Entity& entity, SDL_Renderer* renderer) override;
 
 };
+
+
+struct AttackingPlayerState : State
+{
+public:
+    AttackingPlayerState(){}
+    State* handle_sinput(Entity& entity, SDL_Event event) override{
+        if(event.type == SDL_KEYUP){
+            if(event.key.keysym.sym == SDLK_x)
+            {
+                
+            }
+        }
+
+        return nullptr;
+    }
+
+    State* handle_minput(Entity& entity, const Uint8* key_state) override{
+        //printf("updating WalkingPlayerState\n");
+        return nullptr;
+    }
+
+    State* update(Entity& entity) override{
+        if(entity.animation_finished()) return new SteadyPlayerState();
+        return nullptr;
+    }
+
+    void draw(Entity& entity, SDL_Renderer* renderer) override{
+
+    }
+};
+
 
 
 struct WalkingPlayerState : State
 {
 public:
 	WalkingPlayerState(){}
-    State* handle_sinput(Entity* entity, SDL_Event event) override{
+    State* handle_sinput(Entity& entity, SDL_Event event) override{
         if(event.type == SDL_KEYUP){
-            if(event.key.keysym.sym == SDLK_RIGHT){
-                printf("UPPPPPPPPPPPPPpp\n");
+            if(event.key.keysym.sym == SDLK_RIGHT ||
+                event.key.keysym.sym == SDLK_LEFT ||
+                event.key.keysym.sym == SDLK_DOWN ||
+                event.key.keysym.sym == SDLK_UP)
+            {
                 return new SteadyPlayerState();
             }
         }
@@ -294,39 +334,46 @@ public:
         return nullptr;
     }
 
-    State* handle_minput(Entity* entity, const Uint8* key_state) override{
-        printf("updating WalkingPlayerState\n");
+    State* handle_minput(Entity& entity, const Uint8* key_state) override{
+        if (key_state[SDL_SCANCODE_A]) {
+            return new AttackingPlayerState();
+        }
+
+        return nullptr;
+    }
+
+    State* update(Entity& entity) override{
     	return nullptr;
     }
 
-    State* update(Entity* entity) override{
-    	return nullptr;
-    }
-
-    void draw(Entity* entity, SDL_Renderer* renderer) override{
+    void draw(Entity& entity, SDL_Renderer* renderer) override{
 
     }
 };
 
 
-State* SteadyPlayerState::handle_sinput(Entity* entity, SDL_Event event){
+State* SteadyPlayerState::handle_sinput(Entity& entity, SDL_Event event){
     return nullptr;
 }
 
-State* SteadyPlayerState::handle_minput(Entity* entity, const Uint8* key_state){
-    printf("updating SteadyPlayerState\n");
+State* SteadyPlayerState::handle_minput(Entity& entity, const Uint8* key_state){
+    //printf("updating SteadyPlayerState\n");
     if (key_state[SDL_SCANCODE_RIGHT]) {
         return new WalkingPlayerState();
+    }
+
+    if (key_state[SDL_SCANCODE_A]) {
+        return new AttackingPlayerState();
     }
 
     return nullptr;
 }
 
-State* SteadyPlayerState::update(Entity* entity){
+State* SteadyPlayerState::update(Entity& entity){
     return nullptr;
 }
 
-void SteadyPlayerState::draw(Entity* entity, SDL_Renderer* renderer){
+void SteadyPlayerState::draw(Entity& entity, SDL_Renderer* renderer){
 
 }
 
@@ -359,22 +406,6 @@ public:
 
     }
 
-};
-
-/*struct AttackingPlayerState : PlayerState
-{
-	void update() override{
-
-	}
-    void draw(SDL_Renderer* renderer) override{
-
-    }
-    void handle_sinput(SDL_Event event) override{
-
-    }
-    void handle_minput(Uint8* state) override{
-
-    }
 };
 
 struct WalkingPlayerState : PlayerState

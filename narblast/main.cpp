@@ -16,6 +16,7 @@ namespace Narblast
         }
 
         ~RenderSystem(){
+            printf("render system destroyed\n");
             SDL_DestroyWindow(window);
             SDL_DestroyRenderer(renderer);
         }
@@ -27,10 +28,12 @@ namespace Narblast
             SDL_RenderPresent(renderer);
         }
 
-
-
         void set_renderer_color(Uint8 r, Uint8 g, Uint8 b, Uint8 a){
             SDL_SetRenderDrawColor( renderer, r, g, b, a);
+        }
+
+        void update(){
+            set_renderer_color(255, 255, 255, 255);
         }
 
         SDL_Renderer *renderer = NULL;
@@ -70,6 +73,7 @@ public:
 
     }
     ~Game(){
+        printf("SDL quited\n");
         SDL_Quit();
     }
 
@@ -77,7 +81,7 @@ public:
         while(running){
             renderSystem.clear();
             inputSystem.handle_events(running);
-            renderSystem.set_renderer_color(255, 255, 255, 255);
+            renderSystem.update();
             renderSystem.present();
         }
     }
