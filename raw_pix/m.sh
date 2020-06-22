@@ -1,1 +1,1 @@
-g++ -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer ../SDL_Needs/game.* ../timer.h refact.cpp -o game && ./game
+g++ -lSDL2 refact.cpp -o game && ./game
