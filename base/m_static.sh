@@ -1,0 +1,1 @@
+g++ -Wall -Wextra -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer base_static.cpp -o game && ./game
